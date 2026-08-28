@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] Skills for the selected scope are listed, and selecting one shows its metadata and its path.
-- [ ] `SKILL.md` is never written by Boopervisor.
-- [ ] A skill can be moved between enabled, disabled and archived, and the state survives a reload.
-- [ ] Disabling uses Claude Code's own mechanism for skills, not archival.
-- [ ] Archiving moves no files.
+- [x] Skills for the selected scope are listed, and selecting one shows its metadata and its path.
+- [x] `SKILL.md` is never written by Boopervisor.
+- [x] A skill can be moved between enabled, disabled and archived, and the state survives a reload.
+- [x] Disabling uses Claude Code's own mechanism for skills, not archival.
+- [x] Archiving moves no files.

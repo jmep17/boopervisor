@@ -4,11 +4,11 @@
 
 **Blocked by:** 04 (Write one setting end to end).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Servers from both user and project scope are listed, and selecting one shows its configuration read-only.
-- [ ] A write to `~/.claude.json` changes the `mcpServers` key and leaves project history, session state and onboarding flags byte-identical.
-- [ ] A server can be moved between enabled, disabled and archived, and the state survives a reload.
-- [ ] Archived servers are held disabled and hidden from the main listing, with a way to see them.
-- [ ] Archival is recorded in Boopervisor's own file; no MCP configuration is moved or deleted.
-- [ ] Every write is backed up and stale-checked like any other mutation.
+- [x] Servers from both user and project scope are listed, and selecting one shows its configuration read-only.
+- [x] A write to `~/.claude.json` changes the `mcpServers` key and leaves project history, session state and onboarding flags byte-identical.
+- [x] A server can be moved between enabled, disabled and archived, and the state survives a reload.
+- [x] Archived servers are held disabled and hidden from the main listing, with a way to see them.
+- [x] Archival is recorded in Boopervisor's own file; no MCP configuration is moved or deleted.
+- [x] Every write is backed up and stale-checked like any other mutation.

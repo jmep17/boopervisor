@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] Installed plugins are listed for the selected scope, with the marketplace each came from.
-- [ ] Selecting a plugin shows its `plugin.json` read-only, with its path.
-- [ ] `plugin.json` is never written by Boopervisor.
-- [ ] A plugin can be moved between enabled, disabled and archived, and the state survives a reload.
-- [ ] Archiving moves no files.
+- [x] Installed plugins are listed for the selected scope, with the marketplace each came from.
+- [x] Selecting a plugin shows its `plugin.json` read-only, with its path.
+- [x] `plugin.json` is never written by Boopervisor.
+- [x] A plugin can be moved between enabled, disabled and archived, and the state survives a reload.
+- [x] Archiving moves no files.

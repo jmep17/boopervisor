@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] Precedence resolves managed over project-local over project over user, with tests covering a key set in several scopes at once.
-- [ ] Every settings file may be absent, empty or malformed without breaking the page; the state is reported rather than swallowed.
-- [ ] Each key shows its effective value, its winning scope, and the value each scope contributed.
-- [ ] Uncatalogued keys found on disk are listed and labelled as such.
-- [ ] Managed settings are visibly read-only.
-- [ ] `~/.claude.json` is not part of the settings merge.
-- [ ] `src/lib/config/` is tested against a temporary directory with no browser involved.
+- [x] Precedence resolves managed over project-local over project over user, with tests covering a key set in several scopes at once.
+- [x] Every settings file may be absent, empty or malformed without breaking the page; the state is reported rather than swallowed.
+- [x] Each key shows its effective value, its winning scope, and the value each scope contributed.
+- [x] Uncatalogued keys found on disk are listed and labelled as such.
+- [x] Managed settings are visibly read-only.
+- [x] `~/.claude.json` is not part of the settings merge.
+- [x] `src/lib/config/` is tested against a temporary directory with no browser involved.

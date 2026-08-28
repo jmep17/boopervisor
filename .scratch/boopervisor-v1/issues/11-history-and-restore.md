@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] Every mutation from settings and from item state appears in the list with its file, scope and timestamp.
-- [ ] Each entry shows a readable diff of the change.
-- [ ] Restoring a backup returns the file to those contents in one action.
-- [ ] A restore writes its own backup first and is refused as a stale write if the file changed since it was read.
-- [ ] The restore appears in the history list afterwards.
-- [ ] Pruning to the most recent 50 backups leaves the history list coherent rather than showing entries that cannot be restored.
+- [x] Every mutation from settings and from item state appears in the list with its file, scope and timestamp.
+- [x] Each entry shows a readable diff of the change.
+- [x] Restoring a backup returns the file to those contents in one action.
+- [x] A restore writes its own backup first and is refused as a stale write if the file changed since it was read.
+- [x] The restore appears in the history list afterwards.
+- [x] Pruning to the most recent 50 backups leaves the history list coherent rather than showing entries that cannot be restored.

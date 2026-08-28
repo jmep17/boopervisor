@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] Changing a boolean or string setting writes it to the selected scope's file and the effective value updates.
-- [ ] A backup exists after every mutation, named `<file>.<timestamp>.json`, and only the 50 most recent survive.
-- [ ] A file modified on disk between read and write is refused as a stale write, with a message saying so.
-- [ ] A value the catalog rejects is refused before anything is written.
-- [ ] Unknown keys and formatting elsewhere in the file survive the write.
-- [ ] Every mutation is appended to a log holding enough to render a diff and to restore.
-- [ ] The interface says when the edited scope is not the winning scope.
+- [x] Changing a boolean or string setting writes it to the selected scope's file and the effective value updates.
+- [x] A backup exists after every mutation, named `<file>.<timestamp>.json`, and only the 50 most recent survive.
+- [x] A file modified on disk between read and write is refused as a stale write, with a message saying so.
+- [x] A value the catalog rejects is refused before anything is written.
+- [x] Unknown keys and formatting elsewhere in the file survive the write.
+- [x] Every mutation is appended to a log holding enough to render a diff and to restore.
+- [x] The interface says when the edited scope is not the winning scope.

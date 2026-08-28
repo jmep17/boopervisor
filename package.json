@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "bun test",
+    "catalog:settings": "bun run scripts/extract-settings-reference.ts",
+    "catalog:hooks": "bun run scripts/extract-hooks-reference.ts",
+    "catalog": "bun run catalog:settings && bun run catalog:hooks"
   },
   "dependencies": {
     "geist": "^1.7.2",

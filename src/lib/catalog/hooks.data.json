@@ -1,0 +1,161 @@
+{
+  "source": "https://code.claude.com/docs/en/hooks.md",
+  "extractedAt": "2026-08-28",
+  "events": [
+    {
+      "event": "SessionStart",
+      "summary": "Runs when Claude Code starts a new session or resumes an existing session. Useful for loading development context like existing issues or recent changes to your codebase, or setting up environment variables. For static context that doesn't require a script, use CLAUDE.md instead.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#sessionstart"
+    },
+    {
+      "event": "Setup",
+      "summary": "Fires only when you launch Claude Code with --init-only, or with --init or --maintenance in non-interactive mode with the -p flag. It doesn't fire on normal startup. Use it for one-time dependency installation or scheduled cleanup that you trigger explicitly from CI or scripts, separate from normal session startup. For per-session initialization, use SessionStart instead.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#setup"
+    },
+    {
+      "event": "InstructionsLoaded",
+      "summary": "Fires when a CLAUDE.md or .claude/rules/*.md file is loaded into context. This event fires at session start for eagerly-loaded files and again later when files are lazily loaded, for example when Claude accesses a subdirectory that contains a nested CLAUDE.md or when conditional rules with paths: frontmatter match. The hook doesn't support blocking or decision control. It runs asynchronously for observability purposes.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#instructionsloaded"
+    },
+    {
+      "event": "UserPromptSubmit",
+      "summary": "Runs when the user submits a prompt, before Claude processes it. This allows you",
+      "docUrl": "https://code.claude.com/docs/en/hooks#userpromptsubmit"
+    },
+    {
+      "event": "UserPromptExpansion",
+      "summary": "Runs when a user-typed command expands into a prompt before reaching Claude. Use this to block specific commands from direct invocation, inject context for a particular skill, or log which commands users invoke. For example, a hook matching deploy can block /deploy unless an approval file is present, or a hook matching a review skill can append the team's review checklist as additionalContext.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#userpromptexpansion"
+    },
+    {
+      "event": "MessageDisplay",
+      "summary": "Runs while an assistant message streams to the screen. Claude Code displays the message in increments: each time a batch of newly completed lines is ready to render, the hook runs once with those lines and Claude Code renders the hook's replacement text in their place. A long message produces several calls; a short message may produce only one.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#messagedisplay"
+    },
+    {
+      "event": "PreToolUse",
+      "summary": "Runs after Claude creates tool parameters and before processing the tool call. Matches on any tool name except EndConversation: built-in tools such as Bash, PowerShell, Edit, Write, Read, Glob, Grep, Agent, Workflow, WebFetch, WebSearch, AskUserQuestion, and ExitPlanMode, and any MCP tool names.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#pretooluse"
+    },
+    {
+      "event": "PermissionRequest",
+      "summary": "Runs when Claude Code is about to ask you for permission to use a tool. In sessions that can't show a prompt, such as background subagents in non-interactive mode, Claude Code still runs these hooks, and if no hook returns a decision, it denies the tool call.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#permissionrequest"
+    },
+    {
+      "event": "PostToolUse",
+      "summary": "Runs immediately after a tool completes successfully.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#posttooluse"
+    },
+    {
+      "event": "PostToolUseFailure",
+      "summary": "Runs when a tool that started executing fails: the tool threw an error, or an MCP tool returned an error result. Use this to log failures, send alerts, or provide corrective feedback to Claude.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#posttoolusefailure"
+    },
+    {
+      "event": "PostToolBatch",
+      "summary": "Runs once after every tool call in a batch has resolved, before Claude Code sends the next request to the model. PostToolUse fires once per tool, which means it fires concurrently when Claude makes parallel tool calls. PostToolBatch fires exactly once with the full batch, so it is the right place to inject context that depends on the set of tools that ran rather than on any single tool. There is no matcher for this event.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#posttoolbatch"
+    },
+    {
+      "event": "PermissionDenied",
+      "summary": "Runs when auto mode denies a tool call, including when it denies without a classifier verdict because a safety check separate from auto mode refused the classifier's own request or its response didn't parse. This hook only fires in auto mode: it doesn't run when you manually deny a permission dialog, when a PreToolUse hook blocks a call, or when a deny rule matches. Use it to log denials, adjust configuration, or tell the model it may retry the tool call.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#permissiondenied"
+    },
+    {
+      "event": "Notification",
+      "summary": "Runs when Claude Code sends notifications. Matches on notification type. Omit the matcher to run hooks for all notification types.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#notification"
+    },
+    {
+      "event": "SubagentStart",
+      "summary": "Runs when a Claude Code subagent is spawned via the Agent tool. Supports matchers to filter by agent type name. For built-in agents, this is the agent name like general-purpose, Explore, or Plan. For custom subagents, this is the name field from the agent's frontmatter, not the filename.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#subagentstart"
+    },
+    {
+      "event": "SubagentStop",
+      "summary": "Runs when a Claude Code subagent has finished responding. Matches on agent type, same values as SubagentStart.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#subagentstop"
+    },
+    {
+      "event": "TaskCreated",
+      "summary": "Runs when a task is being created via the TaskCreate tool. Use this to enforce naming conventions, require task descriptions, or prevent certain tasks from being created. In a session without the Task tools, this event doesn't fire.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#taskcreated"
+    },
+    {
+      "event": "TaskCompleted",
+      "summary": "Runs when a task is being marked as completed. This fires in two situations: when any agent explicitly marks a task as completed through the TaskUpdate tool, or when an agent team teammate finishes its turn with in-progress tasks. Use this to enforce completion criteria like passing tests or lint checks before a task can close.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#taskcompleted"
+    },
+    {
+      "event": "Stop",
+      "summary": "Runs when the main Claude Code agent has finished responding. Does not run if",
+      "docUrl": "https://code.claude.com/docs/en/hooks#stop"
+    },
+    {
+      "event": "StopFailure",
+      "summary": "Runs instead of Stop when the turn ends due to an API error. Claude Code ignores the hook's output and exit code, apart from terminalSequence. Use this to log failures, send alerts, or take recovery actions when Claude can't complete a response due to rate limits, authentication problems, or other API errors.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#stopfailure"
+    },
+    {
+      "event": "TeammateIdle",
+      "summary": "Runs when an agent team teammate is about to go idle after finishing its turn. Use this to enforce quality gates before a teammate stops working, such as requiring passing lint checks or verifying that output files exist.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#teammateidle"
+    },
+    {
+      "event": "ConfigChange",
+      "summary": "Runs when a configuration file changes during a session. Use this to audit settings changes, enforce security policies, or block unauthorized modifications to configuration files.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#configchange"
+    },
+    {
+      "event": "CwdChanged",
+      "summary": "Runs when the working directory changes during a session, for example when Claude executes a cd command. Use this to react to directory changes: reload environment variables, activate project-specific toolchains, or run setup scripts automatically. Pairs with FileChanged for tools like direnv that manage per-directory environment.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#cwdchanged"
+    },
+    {
+      "event": "DirectoryAdded",
+      "summary": "Runs after you add a working directory mid-session with the /add-dir command, or after an SDK client adds one with the register_repo_root control request. Use this to prepare a newly added repository, for example by installing its dependencies.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#directoryadded"
+    },
+    {
+      "event": "FileChanged",
+      "summary": "Runs when a watched file changes on disk. Claude Code detects changes with a filesystem watcher, not by inspecting tool calls, so it runs the hook no matter what changed the file: an Edit or Write tool call, a script Claude runs with Bash, or a process outside Claude Code entirely. A common use is reloading environment variables when project configuration files change.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#filechanged"
+    },
+    {
+      "event": "WorktreeCreate",
+      "summary": "Runs when a worktree is being created, whether from claude --worktree, from a subagent using isolation: \"worktree\", or for a background session that Claude Code isolates in its own worktree. By default Claude Code creates the isolated working copy with git worktree. Configuring a WorktreeCreate hook replaces that default git behavior, letting you use a different version control system like SVN, Perforce, or Mercurial.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#worktreecreate"
+    },
+    {
+      "event": "WorktreeRemove",
+      "summary": "Runs when a worktree is being removed. This is the cleanup counterpart to WorktreeCreate. The event fires when:",
+      "docUrl": "https://code.claude.com/docs/en/hooks#worktreeremove"
+    },
+    {
+      "event": "PreCompact",
+      "summary": "Runs before Claude Code is about to run a compact operation.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#precompact"
+    },
+    {
+      "event": "PostCompact",
+      "summary": "Runs after Claude Code completes a compact operation. Use this event to react to the new compacted state, for example to log the generated summary or update external state. Claude Code discards a PostCompact hook's systemMessage and continue fields.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#postcompact"
+    },
+    {
+      "event": "SessionEnd",
+      "summary": "Runs when a Claude Code session ends. Useful for cleanup tasks, logging session",
+      "docUrl": "https://code.claude.com/docs/en/hooks#sessionend"
+    },
+    {
+      "event": "Elicitation",
+      "summary": "Runs when an MCP server requests user input mid-task. By default, Claude Code shows an interactive dialog for the user to respond. Hooks can intercept this request and respond programmatically, skipping the dialog entirely.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#elicitation"
+    },
+    {
+      "event": "ElicitationResult",
+      "summary": "Runs after a user responds to an MCP elicitation. Hooks can observe, modify, or block the response before it is sent back to the MCP server.",
+      "docUrl": "https://code.claude.com/docs/en/hooks#elicitationresult"
+    }
+  ]
+}

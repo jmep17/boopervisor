@@ -24,6 +24,8 @@ export interface Plugin {
   installedScope: string;
   /** Null when `plugin.json` is absent or unreadable; the plugin is still listed. */
   metadata: PluginMetadata | null;
+  /** The manifest actually read, which is not always where one would first look for it. */
+  manifestPath?: string;
 }
 
 /**
@@ -38,24 +40,48 @@ interface InstalledPluginsFile {
 }
 
 /**
- * Read plugin.json from a directory.
+ * A plugin keeps its manifest in `.claude-plugin/plugin.json`. Older installs put it at the
+ * root, so both are looked at before a plugin is reported as having no readable manifest.
+ */
+async function readPluginJsonFile(
+  pluginPath: string
+): Promise<{ text: string; path: string } | undefined> {
+  const candidates = [
+    join(pluginPath, ".claude-plugin", "plugin.json"),
+    join(pluginPath, "plugin.json"),
+  ];
+  for (const path of candidates) {
+    try {
+      return { text: await readFile(path, "utf-8"), path };
+    } catch {
+      continue;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Read plugin.json from a plugin's install directory.
  */
 async function readPluginJson(
   pluginPath: string
-): Promise<PluginMetadata | null> {
+): Promise<{ metadata: PluginMetadata; manifestPath: string } | null> {
   try {
-    const pluginJsonPath = join(pluginPath, "plugin.json");
-    const text = await readFile(pluginJsonPath, "utf-8");
-    const content = JSON.parse(text);
+    const file = await readPluginJsonFile(pluginPath);
+    if (!file) return null;
+    const content = JSON.parse(file.text);
 
     if (!content.name) {
       return null;
     }
 
     return {
-      name: content.name,
-      version: content.version,
-      description: content.description,
+      manifestPath: file.path,
+      metadata: {
+        name: content.name,
+        version: content.version,
+        description: content.description,
+      },
     };
   } catch {
     return null;
@@ -107,9 +133,15 @@ export async function readInstalledPlugins(
       marketplace: id.slice(atIndex + 1),
       path: installation.installPath,
       installedScope: installation.scope,
-      // A plugin whose plugin.json cannot be read is still installed, so it is still listed.
-      metadata: await readPluginJson(installation.installPath),
+      ...manifestOf(await readPluginJson(installation.installPath)),
     };
   }
   return plugins;
+}
+
+/** A plugin whose manifest cannot be read is still installed, so it is still listed. */
+function manifestOf(
+  read: { metadata: PluginMetadata; manifestPath: string } | null
+): { metadata: PluginMetadata | null; manifestPath?: string } {
+  return read ? read : { metadata: null };
 }

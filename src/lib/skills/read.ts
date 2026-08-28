@@ -20,53 +20,81 @@ export interface Skill {
 }
 
 /**
- * Parse YAML frontmatter from SKILL.md content.
- * Frontmatter is between --- delimiters at the start of the file.
+ * The YAML frontmatter of a `SKILL.md`, between the `---` lines at the top.
+ *
+ * Only the shapes skills actually use are read: `key: value`, and the folded and literal
+ * block scalars (`key: >` and `key: |`) that a long description is written with. Anything
+ * else is left alone — Boopervisor shows this file, it does not own its format.
  */
 function parseFrontmatter(text: string): Record<string, string> {
-  const result: Record<string, string> = {};
   const lines = text.split("\n");
+  if (lines[0]?.trim() !== "---") return {};
 
-  // Skip the opening ---
-  if (lines[0] !== "---") return result;
+  const result: Record<string, string> = {};
+  for (let index = 1; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (line.trim() === "---") break;
 
-  let i = 1;
-  while (i < lines.length) {
-    const line = lines[i];
-    if (line === "---") break;
+    const colon = line.indexOf(":");
+    if (colon <= 0 || /^\s/.test(line)) continue;
 
-    // Parse key: value pairs
-    const colonIndex = line.indexOf(":");
-    if (colonIndex > 0) {
-      const key = line.substring(0, colonIndex).trim();
-      const value = line.substring(colonIndex + 1).trim();
-      if (key && value) {
-        result[key] = value;
-      }
+    const key = line.slice(0, colon).trim();
+    const value = line.slice(colon + 1).trim();
+    if (!key) continue;
+
+    if (value === ">" || value === "|" || value === ">-" || value === "|-") {
+      const [block, next] = readBlockScalar(
+        lines,
+        index + 1,
+        value.startsWith(">")
+      );
+      result[key] = block;
+      index = next - 1;
+    } else if (value) {
+      result[key] = unquote(value);
     }
-    i++;
   }
-
   return result;
+}
+
+/** The indented lines under a block scalar. Folded joins them with spaces; literal keeps the breaks. */
+function readBlockScalar(
+  lines: readonly string[],
+  start: number,
+  folded: boolean
+): [string, number] {
+  const block: string[] = [];
+  let index = start;
+  for (; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (line.trim() === "---") break;
+    if (line.trim() !== "" && !/^\s/.test(line)) break;
+    block.push(line.trim());
+  }
+  const text = folded ? block.join(" ").replace(/\s+/g, " ") : block.join("\n");
+  return [text.trim(), index];
+}
+
+function unquote(value: string): string {
+  const quoted = /^"(.*)"$|^'(.*)'$/.exec(value);
+  return quoted ? (quoted[1] ?? quoted[2]) : value;
 }
 
 /**
  * Read a single skill's metadata from its SKILL.md file.
  */
 async function readSkillMetadata(
-  skillPath: string
+  skillPath: string,
+  directoryName: string
 ): Promise<SkillMetadata | null> {
   try {
     const skillMdPath = join(skillPath, "SKILL.md");
     const text = await readFile(skillMdPath, "utf-8");
     const frontmatter = parseFrontmatter(text);
 
-    if (!frontmatter.name) {
-      return null;
-    }
-
+    // Every frontmatter field is optional: a skill's directory is what names it.
     return {
-      name: frontmatter.name,
+      name: frontmatter.name || directoryName,
       description: frontmatter.description,
     };
   } catch {
@@ -93,9 +121,9 @@ export async function readUserScopeSkills(
       if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
 
       const skillPath = join(skillsDir, entry.name);
-      const metadata = await readSkillMetadata(skillPath);
+      const metadata = await readSkillMetadata(skillPath, entry.name);
 
-      if (metadata && metadata.name) {
+      if (metadata) {
         skills[metadata.name] = {
           name: metadata.name,
           path: skillPath,
@@ -128,9 +156,9 @@ export async function readProjectScopeSkills(
       if (!entry.isDirectory()) continue;
 
       const skillPath = join(skillsDir, entry.name);
-      const metadata = await readSkillMetadata(skillPath);
+      const metadata = await readSkillMetadata(skillPath, entry.name);
 
-      if (metadata && metadata.name) {
+      if (metadata) {
         skills[metadata.name] = {
           name: metadata.name,
           path: skillPath,

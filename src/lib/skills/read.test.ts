@@ -54,25 +54,6 @@ description: A test skill
     expect(result).toEqual({});
   });
 
-  test("skips SKILL.md without name field", async () => {
-    const skillsDir = join(home, ".claude", "skills");
-    await mkdir(skillsDir, { recursive: true });
-
-    const skillDir = join(skillsDir, "no-name-skill");
-    await mkdir(skillDir);
-
-    const skillMd = `---
-description: A skill without a name
----
-
-# Nameless
-`;
-    await writeFile(join(skillDir, "SKILL.md"), skillMd);
-
-    const result = await readUserScopeSkills(home);
-    expect(result).toEqual({});
-  });
-
   test("reads multiple skills", async () => {
     const skillsDir = join(home, ".claude", "skills");
     await mkdir(skillsDir, { recursive: true });
@@ -162,6 +143,71 @@ description: A project-scoped skill
     expect(result["project-skill"]).toBeDefined();
     expect(result["project-skill"]?.metadata.description).toBe(
       "A project-scoped skill"
+    );
+  });
+});
+
+describe("frontmatter shapes that actually occur", () => {
+  test("reads a folded description written across several lines", async () => {
+    const home = await mkdtemp(join(tmpdir(), "boopervisor-frontmatter-"));
+    const skill = join(home, ".claude", "skills", "caveman");
+    await mkdir(skill, { recursive: true });
+    await writeFile(
+      join(skill, "SKILL.md"),
+      [
+        "---",
+        "name: caveman",
+        "description: >",
+        "  Ultra-compressed communication mode.",
+        "  Cuts output tokens 65% by speaking like caveman.",
+        "---",
+        "",
+        "# Caveman",
+      ].join("\n")
+    );
+
+    const skills = await readUserScopeSkills(home);
+    expect(skills.caveman?.metadata.description).toBe(
+      "Ultra-compressed communication mode. Cuts output tokens 65% by speaking like caveman."
+    );
+  });
+
+  test("a literal block keeps its line breaks, and quotes come off a plain value", async () => {
+    const home = await mkdtemp(join(tmpdir(), "boopervisor-frontmatter-"));
+    const skill = join(home, ".claude", "skills", "one");
+    await mkdir(skill, { recursive: true });
+    await writeFile(
+      join(skill, "SKILL.md"),
+      [
+        "---",
+        'name: "one"',
+        "description: |",
+        "  first",
+        "  second",
+        "---",
+      ].join("\n")
+    );
+
+    const skills = await readUserScopeSkills(home);
+    expect(skills.one?.metadata.name).toBe("one");
+    expect(skills.one?.metadata.description).toBe("first\nsecond");
+  });
+});
+
+describe("a skill whose frontmatter names nothing", () => {
+  test("is still listed, under the name its directory gives it", async () => {
+    const home = await mkdtemp(join(tmpdir(), "boopervisor-unnamed-"));
+    const skill = join(home, ".claude", "skills", "summarize-changes");
+    await mkdir(skill, { recursive: true });
+    // Every frontmatter field is optional; only `description` is recommended.
+    await writeFile(
+      join(skill, "SKILL.md"),
+      "---\ndescription: Summarize the diff\n---\n"
+    );
+
+    const skills = await readUserScopeSkills(home);
+    expect(skills["summarize-changes"]?.metadata.description).toBe(
+      "Summarize the diff"
     );
   });
 });

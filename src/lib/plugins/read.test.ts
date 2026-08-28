@@ -213,3 +213,36 @@ describe("readInstalledPlugins", () => {
     expect(result["plugin@marketplace"]?.installedScope).toBe("project");
   });
 });
+
+describe("where a plugin keeps its manifest", () => {
+  test("reads .claude-plugin/plugin.json and reports the path it read", async () => {
+    const home = await mkdtemp(join(tmpdir(), "boopervisor-manifest-"));
+    const installPath = join(
+      home,
+      ".claude",
+      "plugins",
+      "cache",
+      "m",
+      "p",
+      "1.0.0"
+    );
+    await mkdir(join(installPath, ".claude-plugin"), { recursive: true });
+    await writeFile(
+      join(installPath, ".claude-plugin", "plugin.json"),
+      JSON.stringify({ name: "p", version: "1.0.0" })
+    );
+    await writeFile(
+      join(home, ".claude", "plugins", "installed_plugins.json"),
+      JSON.stringify({
+        version: 2,
+        plugins: { "p@m": [{ scope: "user", installPath, version: "1.0.0" }] },
+      })
+    );
+
+    const plugin = (await readInstalledPlugins(home))["p@m"];
+    expect(plugin?.metadata?.name).toBe("p");
+    expect(plugin?.manifestPath).toBe(
+      join(installPath, ".claude-plugin", "plugin.json")
+    );
+  });
+});

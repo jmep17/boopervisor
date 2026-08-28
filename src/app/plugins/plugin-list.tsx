@@ -69,7 +69,8 @@ export async function PluginList({
             </h2>
             <p className="text-xs text-gray-800">{plugin.plugin.marketplace}</p>
             <p className="font-mono text-xs text-gray-900">
-              {plugin.plugin.path}/plugin.json
+              {plugin.plugin.manifestPath ??
+                `${plugin.plugin.path}/plugin.json`}
             </p>
           </div>
 

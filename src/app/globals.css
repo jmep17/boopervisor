@@ -1,26 +1,289 @@
 @import "tailwindcss";
 
+/*
+ * Geist design tokens, transcribed from Vercel's published values:
+ *   colours   https://vercel.com/geist/colors
+ *   materials https://vercel.com/geist/materials  (radii and shadows)
+ * Vercel ships no React package for Geist, so keeping these in step is ours to do.
+ * Names are Geist's own, and the step encodes the use: 100 default background,
+ * 200 hover, 300 active, 400 default border, 500 hover border, 600 active border,
+ * 700/800 high-contrast background, 900 secondary text, 1000 primary text.
+ *
+ * Light and dark sit in one `light-dark()` pair each, so a value is defined once
+ * and `color-scheme` below decides which half applies.
+ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light dark;
+
+  --ds-black: #000000;
+  --ds-white: #ffffff;
+
+  --ds-background-100: light-dark(#ffffff, #000000);
+  --ds-background-200: light-dark(#fafafa, #000000);
+
+  --ds-gray-100: light-dark(#f2f2f2, #1a1a1a);
+  --ds-gray-200: light-dark(#ebebeb, #1f1f1f);
+  --ds-gray-300: light-dark(#e6e6e6, #292929);
+  --ds-gray-400: light-dark(#eaeaea, #2e2e2e);
+  --ds-gray-500: light-dark(#c9c9c9, #454545);
+  --ds-gray-600: light-dark(#a8a8a8, #878787);
+  --ds-gray-700: #8f8f8f;
+  --ds-gray-800: #7d7d7d;
+  --ds-gray-900: light-dark(#4d4d4d, #a0a0a0);
+  --ds-gray-1000: light-dark(#171717, #ededed);
+
+  --ds-gray-alpha-100: light-dark(#0000000d, #ffffff12);
+  --ds-gray-alpha-200: light-dark(#00000015, #ffffff17);
+  --ds-gray-alpha-300: light-dark(#0000001a, #ffffff21);
+  --ds-gray-alpha-400: light-dark(#00000014, #ffffff24);
+  --ds-gray-alpha-500: light-dark(#00000036, #ffffff3d);
+  --ds-gray-alpha-600: light-dark(#0000003d, #ffffff82);
+  --ds-gray-alpha-700: light-dark(#00000070, #ffffff8a);
+  --ds-gray-alpha-800: light-dark(#00000082, #ffffff78);
+  --ds-gray-alpha-900: light-dark(#000000b3, #ffffff9c);
+  --ds-gray-alpha-1000: light-dark(#000000e8, #ffffffeb);
+
+  --ds-blue-100: light-dark(#f0f7ff, #06193a);
+  --ds-blue-200: light-dark(#eaf4ff, #022248);
+  --ds-blue-300: light-dark(#e0efff, #002f62);
+  --ds-blue-400: light-dark(#cce7ff, #003771);
+  --ds-blue-500: light-dark(#97ccff, #004287);
+  --ds-blue-600: light-dark(#51aeff, #0090ff);
+  --ds-blue-700: light-dark(#0070f7, #0071f6);
+  --ds-blue-800: light-dark(#005edc, #005fd8);
+  --ds-blue-900: light-dark(#0064e2, #50a8ff);
+  --ds-blue-1000: light-dark(#002453, #ebf6ff);
+
+  --ds-red-100: light-dark(#ffeef0, #330a11);
+  --ds-red-200: light-dark(#ffe9ea, #440d13);
+  --ds-red-300: light-dark(#ffe4e5, #5d0e17);
+  --ds-red-400: light-dark(#ffd8d7, #6f101b);
+  --ds-red-500: light-dark(#ffb5b6, #88151f);
+  --ds-red-600: light-dark(#ff6a6e, #f32e40);
+  --ds-red-700: light-dark(#fc0035, #f13242);
+  --ds-red-800: light-dark(#e70022, #e2162a);
+  --ds-red-900: light-dark(#d60020, #ff5e63);
+  --ds-red-1000: light-dark(#46000c, #ffeaed);
+
+  --ds-amber-100: light-dark(#fff6e1, #291800);
+  --ds-amber-200: light-dark(#fff4d4, #331b00);
+  --ds-amber-300: light-dark(#fff1c8, #4f2900);
+  --ds-amber-400: light-dark(#ffdd84, #573200);
+  --ds-amber-500: light-dark(#ffc85e, #6c4100);
+  --ds-amber-600: light-dark(#ffaa00, #e99c00);
+  --ds-amber-700: #ffb200;
+  --ds-amber-800: #ff9900;
+  --ds-amber-900: light-dark(#a64f00, #ff9900);
+  --ds-amber-1000: light-dark(#541c00, #fff3d9);
+
+  --ds-green-100: light-dark(#ecfdec, #00250a);
+  --ds-green-200: light-dark(#e5fce7, #003110);
+  --ds-green-300: light-dark(#d3fad1, #003814);
+  --ds-green-400: light-dark(#b9f5bc, #004616);
+  --ds-green-500: light-dark(#82eb8d, #00661d);
+  --ds-green-600: light-dark(#4ce15e, #009431);
+  --ds-green-700: light-dark(#28a948, #00ab3e);
+  --ds-green-800: light-dark(#279141, #009335);
+  --ds-green-900: light-dark(#107d32, #00ca52);
+  --ds-green-1000: light-dark(#00370d, #daffe5);
+
+  --ds-teal-100: light-dark(#dffffb, #00211b);
+  --ds-teal-200: light-dark(#ddfef6, #002922);
+  --ds-teal-300: light-dark(#ccf9f1, #003b33);
+  --ds-teal-400: light-dark(#b1f7ec, #003f35);
+  --ds-teal-500: light-dark(#52f0db, #005f53);
+  --ds-teal-600: light-dark(#00e2c4, #009885);
+  --ds-teal-700: light-dark(#00a694, #00a794);
+  --ds-teal-800: #008d7d;
+  --ds-teal-900: light-dark(#007a6e, #00c9b5);
+  --ds-teal-1000: light-dark(#003d34, #cefff5);
+
+  --ds-purple-100: light-dark(#f9f0ff, #290c33);
+  --ds-purple-200: light-dark(#f9f1ff, #341142);
+  --ds-purple-300: light-dark(#f5e8ff, #47185e);
+  --ds-purple-400: light-dark(#f1d9ff, #541a76);
+  --ds-purple-500: light-dark(#dda9ff, #642290);
+  --ds-purple-600: light-dark(#c77dff, #9440d5);
+  --ds-purple-700: light-dark(#9f00f4, #9440d5);
+  --ds-purple-800: light-dark(#8400cd, #7d2bba);
+  --ds-purple-900: light-dark(#7c00c9, #c472fb);
+  --ds-purple-1000: light-dark(#2e004d, #faedff);
+
+  --ds-pink-100: light-dark(#ffeaf5, #310d1e);
+  --ds-pink-200: light-dark(#ffeaf2, #420c25);
+  --ds-pink-300: light-dark(#ffe0eb, #571032);
+  --ds-pink-400: light-dark(#ffd5e1, #5d0c34);
+  --ds-pink-500: light-dark(#fdb3cc, #76063f);
+  --ds-pink-600: light-dark(#f97ea7, #b90056);
+  --ds-pink-700: light-dark(#f22782, #f12b82);
+  --ds-pink-800: light-dark(#e4106e, #e6006e);
+  --ds-pink-900: light-dark(#c41562, #ff518d);
+  --ds-pink-1000: light-dark(#460523, #ffeaf4);
+
+  --ds-shadow-border-base: light-dark(0 0 0 1px #00000014, 0 0 0 1px #ffffff25);
+  --ds-shadow-background-border: 0 0 0 1px var(--ds-background-200);
+  --ds-shadow-small: light-dark(0px 2px 2px #0000000a, 0px 1px 2px #00000029);
+  /* `light-dark()` takes exactly two arguments, so a two-layer shadow is a
+     light-dark pair per layer. */
+  --ds-shadow-medium-near: light-dark(0px 2px 2px #0000000a, 0px 2px 2px #00000052);
+  --ds-shadow-medium-far: light-dark(0px 8px 8px -8px #0000000a, 0px 8px 8px -8px #00000029);
+  --ds-shadow-medium: var(--ds-shadow-medium-near), var(--ds-shadow-medium-far);
+  --ds-shadow-large: 0px 2px 2px #0000000a, 0px 8px 16px -4px #0000000a;
 }
 
+/* An explicit theme choice overrides the operating system's. */
+.light {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Tailwind's own palette is cleared, so every colour utility in the codebase is
+ * a Geist token by construction and a stray `bg-zinc-50` fails to compile.
+ */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-*: initial;
+
+  --color-black: var(--ds-black);
+  --color-white: var(--ds-white);
+
+  --color-background-100: var(--ds-background-100);
+  --color-background-200: var(--ds-background-200);
+
+  --color-gray-100: var(--ds-gray-100);
+  --color-gray-200: var(--ds-gray-200);
+  --color-gray-300: var(--ds-gray-300);
+  --color-gray-400: var(--ds-gray-400);
+  --color-gray-500: var(--ds-gray-500);
+  --color-gray-600: var(--ds-gray-600);
+  --color-gray-700: var(--ds-gray-700);
+  --color-gray-800: var(--ds-gray-800);
+  --color-gray-900: var(--ds-gray-900);
+  --color-gray-1000: var(--ds-gray-1000);
+
+  --color-gray-alpha-100: var(--ds-gray-alpha-100);
+  --color-gray-alpha-200: var(--ds-gray-alpha-200);
+  --color-gray-alpha-300: var(--ds-gray-alpha-300);
+  --color-gray-alpha-400: var(--ds-gray-alpha-400);
+  --color-gray-alpha-500: var(--ds-gray-alpha-500);
+  --color-gray-alpha-600: var(--ds-gray-alpha-600);
+  --color-gray-alpha-700: var(--ds-gray-alpha-700);
+  --color-gray-alpha-800: var(--ds-gray-alpha-800);
+  --color-gray-alpha-900: var(--ds-gray-alpha-900);
+  --color-gray-alpha-1000: var(--ds-gray-alpha-1000);
+
+  --color-blue-100: var(--ds-blue-100);
+  --color-blue-200: var(--ds-blue-200);
+  --color-blue-300: var(--ds-blue-300);
+  --color-blue-400: var(--ds-blue-400);
+  --color-blue-500: var(--ds-blue-500);
+  --color-blue-600: var(--ds-blue-600);
+  --color-blue-700: var(--ds-blue-700);
+  --color-blue-800: var(--ds-blue-800);
+  --color-blue-900: var(--ds-blue-900);
+  --color-blue-1000: var(--ds-blue-1000);
+
+  --color-red-100: var(--ds-red-100);
+  --color-red-200: var(--ds-red-200);
+  --color-red-300: var(--ds-red-300);
+  --color-red-400: var(--ds-red-400);
+  --color-red-500: var(--ds-red-500);
+  --color-red-600: var(--ds-red-600);
+  --color-red-700: var(--ds-red-700);
+  --color-red-800: var(--ds-red-800);
+  --color-red-900: var(--ds-red-900);
+  --color-red-1000: var(--ds-red-1000);
+
+  --color-amber-100: var(--ds-amber-100);
+  --color-amber-200: var(--ds-amber-200);
+  --color-amber-300: var(--ds-amber-300);
+  --color-amber-400: var(--ds-amber-400);
+  --color-amber-500: var(--ds-amber-500);
+  --color-amber-600: var(--ds-amber-600);
+  --color-amber-700: var(--ds-amber-700);
+  --color-amber-800: var(--ds-amber-800);
+  --color-amber-900: var(--ds-amber-900);
+  --color-amber-1000: var(--ds-amber-1000);
+
+  --color-green-100: var(--ds-green-100);
+  --color-green-200: var(--ds-green-200);
+  --color-green-300: var(--ds-green-300);
+  --color-green-400: var(--ds-green-400);
+  --color-green-500: var(--ds-green-500);
+  --color-green-600: var(--ds-green-600);
+  --color-green-700: var(--ds-green-700);
+  --color-green-800: var(--ds-green-800);
+  --color-green-900: var(--ds-green-900);
+  --color-green-1000: var(--ds-green-1000);
+
+  --color-teal-100: var(--ds-teal-100);
+  --color-teal-200: var(--ds-teal-200);
+  --color-teal-300: var(--ds-teal-300);
+  --color-teal-400: var(--ds-teal-400);
+  --color-teal-500: var(--ds-teal-500);
+  --color-teal-600: var(--ds-teal-600);
+  --color-teal-700: var(--ds-teal-700);
+  --color-teal-800: var(--ds-teal-800);
+  --color-teal-900: var(--ds-teal-900);
+  --color-teal-1000: var(--ds-teal-1000);
+
+  --color-purple-100: var(--ds-purple-100);
+  --color-purple-200: var(--ds-purple-200);
+  --color-purple-300: var(--ds-purple-300);
+  --color-purple-400: var(--ds-purple-400);
+  --color-purple-500: var(--ds-purple-500);
+  --color-purple-600: var(--ds-purple-600);
+  --color-purple-700: var(--ds-purple-700);
+  --color-purple-800: var(--ds-purple-800);
+  --color-purple-900: var(--ds-purple-900);
+  --color-purple-1000: var(--ds-purple-1000);
+
+  --color-pink-100: var(--ds-pink-100);
+  --color-pink-200: var(--ds-pink-200);
+  --color-pink-300: var(--ds-pink-300);
+  --color-pink-400: var(--ds-pink-400);
+  --color-pink-500: var(--ds-pink-500);
+  --color-pink-600: var(--ds-pink-600);
+  --color-pink-700: var(--ds-pink-700);
+  --color-pink-800: var(--ds-pink-800);
+  --color-pink-900: var(--ds-pink-900);
+  --color-pink-1000: var(--ds-pink-1000);
+
+  /* Geist materials: surfaces are 6px, floating elements 12px, fullscreen 16px. */
+  --radius-base: 6px;
+  --radius-medium: 12px;
+  --radius-large: 12px;
+  --radius-fullscreen: 16px;
+
+  --shadow-border: var(--ds-shadow-border-base), var(--ds-shadow-background-border);
+  --shadow-small: var(--ds-shadow-small);
+  --shadow-medium: var(--ds-shadow-medium);
+  --shadow-large: var(--ds-shadow-large);
+  --shadow-menu:
+    var(--ds-shadow-border-base), 0px 1px 1px #00000005, 0px 4px 8px -4px #0000000a,
+    0px 16px 24px -8px #0000000f, var(--ds-shadow-background-border);
+  --shadow-modal:
+    var(--ds-shadow-border-base), 0px 1px 1px #00000005, 0px 8px 16px -4px #0000000a,
+    0px 24px 32px -8px #0000000f, var(--ds-shadow-background-border);
+  --shadow-tooltip:
+    var(--ds-shadow-border-base), 0px 1px 1px #00000005, 0px 4px 8px #0000000a,
+    var(--ds-shadow-background-border);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Geist control heights, smallest to largest. */
+  --spacing-control-sm: 32px;
+  --spacing-control-md: 40px;
+  --spacing-control-lg: 48px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--ds-background-100);
+  color: var(--ds-gray-1000);
 }

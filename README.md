@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Boopervisor
 
-## Getting Started
+A local web interface for Claude Code's configuration. It reads and edits the real files on
+this machine — `settings.json` at every scope, `.mcp.json`, `~/.claude.json`, and the skill
+and plugin directories — and shows you what Claude Code will actually do with them.
 
-First, run the development server:
+Claude Code has no configuration API. Everything here is filesystem work behind a browser UI,
+which is why the server has to run locally.
+
+## Status
+
+Scaffolded. Nothing is implemented yet. See `docs/PLAN.md` for the agreed design and
+`docs/adr/` for the decisions that are settled.
+
+## Running
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+bun install
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## What it covers
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Settings** — a form for every documented settings key, with dropdowns where the key has
+  enumerated values, showing the effective value and which scope set it.
+- **Skills**, **Plugins**, **MCP servers** — enable, disable or archive each one.
 
-## Learn More
+Anthropic's Admin API (organisation members, workspaces, API keys, spend limits) is a
+different product with different authentication and is deliberately out of scope. claude.ai's
+own account preferences have no public API at all and cannot be covered.
 
-To learn more about Next.js, take a look at the following resources:
+## Reading order
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `CONTEXT.md` — the vocabulary. Read this first; the terms are used precisely.
+- `docs/PLAN.md` — scope, architecture and what is deferred.
+- `docs/adr/` — decisions that would otherwise look arbitrary.
+- `docs/settings-catalog.md` — where each catalog entry came from.

@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] Every non-virtual catalog key renders the control its definition names.
-- [ ] Any key with a closed set of allowed values is a dropdown, never free text.
-- [ ] The list editor adds, edits, reorders and removes entries and writes a well-formed array.
-- [ ] The JSON editor refuses to submit invalid JSON, and refuses a value the catalog rejects.
-- [ ] Machine-local option sources are read at render time and degrade to free entry when unavailable.
-- [ ] Every control writes through the same validated, backed-up, stale-checked path as ticket 04.
+- [x] Every non-virtual catalog key renders the control its definition names.
+- [x] Any key with a closed set of allowed values is a dropdown, never free text.
+- [x] The list editor adds, edits, reorders and removes entries and writes a well-formed array.
+- [x] The JSON editor refuses to submit invalid JSON, and refuses a value the catalog rejects.
+- [x] Machine-local option sources are read at render time and degrade to free entry when unavailable.
+- [x] Every control writes through the same validated, backed-up, stale-checked path as ticket 04.

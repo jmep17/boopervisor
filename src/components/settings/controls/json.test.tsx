@@ -1,38 +1,37 @@
 import { describe, expect, test } from "bun:test";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
 import { JsonControl } from "./json";
 
 describe("JsonControl", () => {
-  test("renders a textarea for JSON input", () => {
-    render(<JsonControl value={{ key: "value" }} />);
-    const textarea = screen.getByRole("textbox");
-    expect(textarea).toBeInTheDocument();
+  test("shows the value as JSON", () => {
+    render(<JsonControl value={{ FOO: "bar" }} />);
+    expect(screen.getByRole("textbox")).toHaveValue('{\n  "FOO": "bar"\n}');
   });
 
-  test("formats object values as pretty-printed JSON", () => {
-    render(<JsonControl value={{ a: 1, b: 2 }} />);
-    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
-    expect(textarea.value).toContain('"a": 1');
-    expect(textarea.value).toContain('"b": 2');
-  });
-
-  test("renders with empty value when undefined", () => {
+  test("refuses text that is not JSON, so the form will not submit it", async () => {
+    const user = userEvent.setup();
     render(<JsonControl value={undefined} />);
-    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
-    expect(textarea.value).toBe("");
+
+    const editor = screen.getByRole("textbox") as HTMLTextAreaElement;
+    // user-event reads `{` as a key descriptor, so a literal brace is doubled.
+    await user.type(editor, "{{not json");
+
+    expect(editor.checkValidity()).toBe(false);
+    expect(screen.getByRole("alert")).toHaveTextContent(/Not valid JSON/);
   });
 
-  test("handles array values", () => {
-    render(<JsonControl value={[1, 2, 3]} />);
-    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
-    expect(textarea.value).toContain("1");
-    expect(textarea.value).toContain("2");
-    expect(textarea.value).toContain("3");
-  });
+  test("accepts JSON, and accepts empty, which unsets the key", async () => {
+    const user = userEvent.setup();
+    render(<JsonControl value={undefined} />);
 
-  test("has monospace font class", () => {
-    render(<JsonControl value={{ test: true }} />);
-    const textarea = screen.getByRole("textbox");
-    expect(textarea.className).toContain("font-mono");
+    const editor = screen.getByRole("textbox") as HTMLTextAreaElement;
+    await user.type(editor, '{{"a":1}');
+    expect(editor.checkValidity()).toBe(true);
+
+    await user.clear(editor);
+    expect(editor.checkValidity()).toBe(true);
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 });

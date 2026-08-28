@@ -18,6 +18,18 @@ interface HookEntryUI {
 }
 
 /** Hook entries editor organized by event from the catalog. */
+/**
+ * The script a command runs, where the command is one. A command that pipes or chains is
+ * shown as it is rather than guessed at.
+ */
+function scriptPath(command: string): string | undefined {
+  const [word] = command.trim().split(/\s+/);
+  return word &&
+    (word.startsWith("/") || word.startsWith("~") || word.startsWith("./"))
+    ? word
+    : undefined;
+}
+
 export function HooksEditorControl({ value }: HooksEditorControlProps) {
   // Parse the value into event → entries map
   const parsed = parseHooksObject(value);
@@ -144,13 +156,30 @@ export function HooksEditorControl({ value }: HooksEditorControlProps) {
                           <Input
                             type="text"
                             value={entry.command}
-                            readOnly
-                            placeholder="Read-only: set in source"
-                            className="bg-gray-100 text-gray-900"
+                            onChange={(e) =>
+                              handleUpdateEntry(
+                                event.event,
+                                index,
+                                "command",
+                                e.currentTarget.value
+                              )
+                            }
+                            placeholder="The command Claude Code runs"
+                            className="font-mono"
                           />
-                          <p className="text-xs text-gray-800 mt-1">
-                            Hook scripts are read-only. Edit this script in your
-                            source or project settings.
+                          <p className="mt-1 text-xs text-gray-800">
+                            {scriptPath(entry.command) ? (
+                              <>
+                                Runs{" "}
+                                <span className="font-mono">
+                                  {scriptPath(entry.command)}
+                                </span>
+                                . Boopervisor never writes that file — open it
+                                to change what the hook does.
+                              </>
+                            ) : (
+                              "Boopervisor writes this line into the settings file, and never the script it runs."
+                            )}
                           </p>
                         </div>
                       </div>

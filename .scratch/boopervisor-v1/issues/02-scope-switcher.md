@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] The switcher lists the user scope plus every project from the `projects` map in `~/.claude.json`.
-- [ ] A directory that is not in that map can be selected manually and becomes usable as a scope.
-- [ ] No code path enumerates directories looking for projects.
-- [ ] The selection persists across navigation and page reload.
-- [ ] Reading `~/.claude.json` is server-only and tolerates the file being absent or unparseable without crashing the page.
+- [x] The switcher lists the user scope plus every project from the `projects` map in `~/.claude.json`.
+- [x] A directory that is not in that map can be selected manually and becomes usable as a scope.
+- [x] No code path enumerates directories looking for projects.
+- [x] The selection persists across navigation and page reload.
+- [x] Reading `~/.claude.json` is server-only and tolerates the file being absent or unparseable without crashing the page.

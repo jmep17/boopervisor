@@ -97,7 +97,7 @@ describe("HooksEditorControl", () => {
     expect(submitted.UserPromptSubmit[0].matcher).toBe("test");
   });
 
-  test("shows command as read-only", () => {
+  test("names the script a command runs, which Boopervisor never writes", () => {
     render(
       <HooksEditorControl
         value={{
@@ -106,10 +106,24 @@ describe("HooksEditorControl", () => {
       />
     );
 
-    const commandInput = screen.getByDisplayValue(
-      "/path/to/script.sh"
-    ) as HTMLInputElement;
-    expect(commandInput).toHaveAttribute("readonly");
+    expect(screen.getByText(/\/path\/to\/script\.sh/)).toBeInTheDocument();
+    expect(screen.getByText(/never writes that file/)).toBeInTheDocument();
+  });
+
+  test("the command itself is edited here, so a hook added here can run something", async () => {
+    const user = userEvent.setup();
+    render(
+      <HooksEditorControl
+        value={{ SessionStart: [{ matcher: "", command: "" }] }}
+      />
+    );
+
+    const command = screen.getByPlaceholderText("The command Claude Code runs");
+    await user.type(command, "/bin/echo hi");
+
+    expect(JSON.parse(hiddenValue()).SessionStart[0].command).toBe(
+      "/bin/echo hi"
+    );
   });
 
   test("carries the whole structure to the server as JSON", () => {

@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] `src/app/page.tsx`, `layout.tsx` and `globals.css` carry no create-next-app content.
-- [ ] Geist tokens are available as Tailwind theme values, not hardcoded hex in components.
-- [ ] Geist Sans and Geist Mono load from the `geist` package. `@geist-ui/react` is not a dependency.
-- [ ] The five routes exist and the header navigates between them, with the current route marked.
-- [ ] The shared controls render in isolation and are used by the header, so the token layer is proven rather than asserted.
+- [x] `src/app/page.tsx`, `layout.tsx` and `globals.css` carry no create-next-app content.
+- [x] Geist tokens are available as Tailwind theme values, not hardcoded hex in components.
+- [x] Geist Sans and Geist Mono load from the `geist` package. `@geist-ui/react` is not a dependency.
+- [x] The five routes exist and the header navigates between them, with the current route marked.
+- [x] The shared controls render in isolation and are used by the header, so the token layer is proven rather than asserted.

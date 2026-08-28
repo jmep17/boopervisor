@@ -11,7 +11,7 @@ describe("Select", () => {
           <SelectItem value="default">default</SelectItem>
           <SelectItem value="explanatory">explanatory</SelectItem>
         </Select>
-      </Field>,
+      </Field>
     );
     const trigger = screen.getByLabelText("Output style");
     expect(trigger).toHaveRole("combobox");
@@ -25,8 +25,41 @@ describe("Select", () => {
           <SelectItem value="default">default</SelectItem>
           <SelectItem value="explanatory">explanatory</SelectItem>
         </Select>
-      </Field>,
+      </Field>
     );
-    expect(screen.getByLabelText("Output style")).toHaveTextContent("explanatory");
+    expect(screen.getByLabelText("Output style")).toHaveTextContent(
+      "explanatory"
+    );
+  });
+});
+
+describe("Select outside a Field", () => {
+  test("takes its accessible name from aria-label", () => {
+    render(
+      <Select aria-label="Scope" defaultValue="user">
+        <SelectItem value="user">User</SelectItem>
+      </Select>
+    );
+    expect(screen.getByRole("combobox", { name: "Scope" })).toHaveTextContent(
+      "User"
+    );
+  });
+});
+
+describe("Select with a given value label", () => {
+  test("shows the label without waiting for its items to mount", () => {
+    render(
+      <Select
+        aria-label="Scope"
+        value="project:/x/api"
+        valueLabel="api"
+        onValueChange={() => {}}
+      >
+        <SelectItem value="user">User</SelectItem>
+      </Select>
+    );
+    expect(screen.getByRole("combobox", { name: "Scope" })).toHaveTextContent(
+      "api"
+    );
   });
 });

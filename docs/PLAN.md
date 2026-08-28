@@ -50,7 +50,10 @@ Out of scope, deliberately:
 
 - A route per domain: `/settings`, `/skills`, `/plugins`, `/mcp`, plus `/history`.
 - Master-detail within `/skills`, `/plugins` and `/mcp`: item list on the left, detail and
-  state controls on the right.
+  state controls on the right. Each listing shows the selected scope's own items and not the
+  user-level ones a project also inherits: the two are different scopes, the switcher says
+  which one is selected, and inheritance can be assumed rather than restated. `/settings` is
+  the exception, because a setting's whole point is the value that wins across scopes.
 - A global scope switcher in the header — user, or a specific project — because it changes
   what every page shows. Projects come from the `projects` map in `~/.claude.json`, plus a
   manual directory picker for one that is not listed. Nothing is discovered by scanning the

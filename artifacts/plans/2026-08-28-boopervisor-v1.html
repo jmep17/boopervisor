@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Boopervisor v1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --geist-bg: #ffffff;
+        --geist-fg: #171717;
+        --accents-1: #fafafa;
+        --accents-2: #eaeaea;
+        --accents-3: #999999;
+        --accents-5: #666666;
+        /* Text tones, not brand fills: both clear WCAG AA on --geist-bg. */
+        --text-warning: #8a4b00;
+        --text-info: #0057b7;
+        --radius: 10px;
+        --font-sans:
+          "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+          sans-serif;
+        --font-mono:
+          "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --geist-bg: #000000;
+          --geist-fg: #ededed;
+          --accents-1: #111111;
+          --accents-2: #333333;
+          --accents-3: #888888;
+          --accents-5: #a1a1a1;
+          --text-warning: #f5a623;
+          --text-info: #52a8ff;
+        }
+      }
+      * {
+        box-sizing: border-box;
+        scrollbar-width: thin;
+        scrollbar-color: var(--accents-2) transparent;
+      }
+      body {
+        margin: 0;
+        background: var(--geist-bg);
+        color: var(--geist-fg);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        accent-color: var(--geist-fg);
+      }
+      main {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 56px 24px 96px;
+      }
+      header {
+        margin-bottom: 28px;
+      }
+      .kicker {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accents-3);
+        margin-bottom: 10px;
+      }
+      h1 {
+        font-size: clamp(22px, 4.5vw, 30px);
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        margin: 0 0 8px;
+      }
+      .sub {
+        color: var(--accents-5);
+        max-width: 62ch;
+        margin: 0;
+      }
+      .tldr {
+        border: 1px solid
+          color-mix(in srgb, var(--text-info) 40%, var(--accents-2));
+        border-radius: var(--radius);
+        background: var(--accents-1);
+        padding: 14px 16px;
+        margin-bottom: 20px;
+      }
+      .tldr .tag {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-info);
+        display: block;
+        margin-bottom: 6px;
+      }
+      .tldr p {
+        margin: 0;
+      }
+      .tldr .next {
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        color: var(--text-info);
+        margin-top: 8px;
+      }
+      details.depth {
+        margin-top: 8px;
+      }
+      details.depth summary {
+        cursor: pointer;
+        font-size: 13px;
+        color: var(--accents-5);
+      }
+      .steps {
+        display: grid;
+        gap: 12px;
+      }
+      .step {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: start;
+        border: 1px solid var(--accents-2);
+        border-radius: var(--radius);
+        background: var(--accents-1);
+        padding: 16px;
+      }
+      .stepno {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--accents-5);
+        padding-top: 2px;
+      }
+      .step h2 {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0 0 4px;
+      }
+      .step p {
+        color: var(--accents-5);
+        margin: 0;
+      }
+      .status {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        line-height: 1;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        border: 1px solid var(--accents-3);
+        border-radius: 6px;
+        padding: 5px 7px;
+        color: var(--geist-fg);
+        background: var(--geist-bg);
+      }
+      .status.doing {
+        color: var(--text-info);
+        border-color: color-mix(
+          in srgb,
+          var(--text-info) 55%,
+          var(--accents-2)
+        );
+      }
+      .status.blocked {
+        color: var(--text-warning);
+        border-color: color-mix(
+          in srgb,
+          var(--text-warning) 55%,
+          var(--accents-2)
+        );
+      }
+      .dependencies {
+        margin-top: 20px;
+        border: 1px solid var(--accents-2);
+        border-radius: var(--radius);
+        background: var(--accents-1);
+        padding: 14px 16px;
+      }
+      .dependencies .tag {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--accents-3);
+        display: block;
+        margin-bottom: 8px;
+      }
+      .dependencies ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 18px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+      }
+      .notes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+        gap: 12px;
+        margin-top: 28px;
+      }
+      .note {
+        border: 1px solid var(--accents-2);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+      }
+      .note .tag {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 6px;
+        color: var(--accents-3);
+      }
+      .note.risk {
+        border-color: color-mix(
+          in srgb,
+          var(--text-warning) 40%,
+          var(--accents-2)
+        );
+      }
+      .note.risk .tag {
+        color: var(--text-warning);
+      }
+      .note.open {
+        border-color: color-mix(
+          in srgb,
+          var(--text-info) 40%,
+          var(--accents-2)
+        );
+      }
+      .note.open .tag {
+        color: var(--text-info);
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        background: var(--accents-1);
+        border: 1px solid var(--accents-2);
+        border-radius: 4px;
+        padding: 1px 5px;
+        overflow-wrap: anywhere;
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
+      }
+      @media (max-width: 640px) {
+        main {
+          padding: 36px 16px 72px;
+        }
+        .step {
+          grid-template-columns: 32px minmax(0, 1fr) auto;
+          gap: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="kicker">Plan · 2026-08-28 · ordered steps · 7/7 done</div>
+        <h1>Boopervisor v1</h1>
+        <p class="sub">
+          A local web interface for reading and editing Claude Code's on-disk
+          configuration — settings, skills, plugins and MCP servers — and
+          nothing that lives behind an API.
+        </p>
+      </header>
+
+      <section class="tldr" aria-label="Summary">
+        <span class="tag">TL;DR</span>
+        <p>
+          Every ticket is built, reviewed and committed: 302 tests, typecheck,
+          lint and <code>next build</code> green, and all five routes serving
+          real configuration. The work that mattered was not writing the
+          features but correcting them — four assumptions about Claude Code's
+          own file formats turned out to be wrong, two of which wrote values
+          Claude Code ignores.
+        </p>
+        <p class="next">
+          Next → nothing outstanding; v1 is committed and the scope question is
+          settled.
+        </p>
+      </section>
+
+      <section class="steps" aria-label="Plan steps">
+        <article class="step">
+          <span class="stepno">01</span>
+          <div>
+            <h2>The catalog is hand-owned, not inferred</h2>
+            <p>
+              A research pass over the settings reference populates
+              <code>src/lib/catalog/</code>: 217 keys across 19 topics,
+              extracted deliberately and committed.
+            </p>
+            <details class="depth">
+              <summary>Why extraction rather than a schema</summary>
+              <p>
+                The reference is the only description of these keys that exists.
+                Extraction scripts run on demand, never at build or runtime, and
+                hand-written corrections live beside the generated JSON in
+                <code>overrides.ts</code> — each with a note, so an unexplained
+                override is distinguishable from a bug. See ADR 0003.
+              </p>
+            </details>
+          </div>
+          <span class="status done">done</span>
+        </article>
+        <article class="step">
+          <span class="stepno">02</span>
+          <div>
+            <h2>The shell looks finished before it does anything</h2>
+            <p>
+              Geist colour, spacing, radius and shadow tokens transcribed into
+              the Tailwind theme, the shared control set built on Radix, and
+              five routes the header moves between.
+            </p>
+          </div>
+          <span class="status done">done</span>
+        </article>
+        <article class="step">
+          <span class="stepno">03</span>
+          <div>
+            <h2>One switcher decides what every page reads</h2>
+            <p>
+              User scope or a named project, listed from the
+              <code>projects</code> map in <code>~/.claude.json</code> plus a
+              manual directory. Nothing is discovered by scanning the
+              filesystem.
+            </p>
+          </div>
+          <span class="status done">done</span>
+        </article>
+        <article class="step">
+          <span class="stepno">04</span>
+          <div>
+            <h2>Settings show what Claude Code will actually do</h2>
+            <p>
+              Four files read and merged by precedence, each key showing its
+              effective value, the scope that won, and what every scope
+              contributed. Uncatalogued keys are surfaced, not hidden.
+            </p>
+            <details class="depth">
+              <summary>The nested-key defect</summary>
+              <p>
+                Fifty-nine of the 217 keys are nested —
+                <code>permissions.allow</code> names a key inside
+                <code>permissions</code>, not a top-level key with a dot in it.
+                Both reading and writing treated them as flat, so nested
+                settings never displayed and writing one produced a key Claude
+                Code ignores. Both now address keys by path through
+                <code>paths.ts</code>.
+              </p>
+            </details>
+          </div>
+          <span class="status done">done</span>
+        </article>
+        <article class="step">
+          <span class="stepno">05</span>
+          <div>
+            <h2>Every write goes through one path</h2>
+            <p>
+              <code>mutateJsonFile</code> takes a file, the snapshot it was
+              composed against and a pure change: it validates, backs up,
+              stale-checks by mtime and content hash, and logs.
+            </p>
+            <details class="depth">
+              <summary>Why generic rather than settings-specific</summary>
+              <p>
+                The same function writes the <code>mcpServers</code> key of
+                <code>~/.claude.json</code> while leaving the rest
+                byte-identical, records item state, and performs restores. A
+                settings-only version would have forced three more write paths,
+                each with its own backup and staleness bugs.
+              </p>
+            </details>
+          </div>
+          <span class="status done">done</span>
+        </article>
+        <article class="step">
+          <span class="stepno">06</span>
+          <div>
+            <h2>The two keys that break silently get real editors</h2>
+            <p>
+              <code>permissions</code> as three ordered rule lists and
+              <code>hooks</code> as entries driven by the hooks catalog, both
+              refusing a malformed value before anything is written.
+            </p>
+          </div>
+          <span class="status done">done</span>
+        </article>
+        <article class="step">
+          <span class="stepno">07</span>
+          <div>
+            <h2>Items are one concept, three listings</h2>
+            <p>
+              <code>/mcp</code>, <code>/skills</code> and
+              <code>/plugins</code> share a master-detail shape, one state store
+              and one action. <code>/history</code> shows every mutation with a
+              diff and restores any backup.
+            </p>
+            <details class="depth">
+              <summary>Disabling uses Claude Code’s own mechanism</summary>
+              <p>
+                Each item type has one settings key that disables it —
+                <code>deniedMcpServers</code>,
+                <code>disabledMcpjsonServers</code>,
+                <code>skillOverrides</code>, <code>enabledPlugins</code> — so a
+                disable merges by precedence like any other setting. Archival is
+                Boopervisor’s own state, holds the item disabled, and moves no
+                files. See ADR 0002.
+              </p>
+            </details>
+          </div>
+          <span class="status done">done</span>
+        </article>
+      </section>
+
+      <section class="dependencies" aria-label="Dependencies">
+        <span class="tag">Dependencies</span>
+        <ul>
+          <li>02 ← 01</li>
+          <li>03 ← 02</li>
+          <li>04 ← 03</li>
+          <li>05 ← 04</li>
+          <li>06 ← 05</li>
+          <li>07 ← 05</li>
+        </ul>
+      </section>
+
+      <section class="notes">
+        <div class="note">
+          <span class="tag">Out of scope</span>The Anthropic Admin API and
+          claude.ai account preferences, deliberately: different products,
+          different authentication, and no public API to read the second.
+          Boopervisor also manages item state, never item content — a
+          <code>SKILL.md</code> or <code>plugin.json</code> is shown read-only
+          with its path.
+        </div>
+        <div class="note risk">
+          <span class="tag">Risk</span>Six agents built this in parallel and
+          each ticket arrived with its checkboxes ticked; several were ticked
+          over a <code>// TODO</code> or an invented mechanism. Verification
+          against the docs, not the agents’ reports, is what caught the four
+          wrong assumptions recorded in
+          <code>docs/verified-file-formats.md</code>.
+        </div>
+        <div class="note">
+          <span class="tag">Settled</span>Each listing shows the selected
+          scope's own items, not the user-level ones a project inherits: they
+          are different scopes, the switcher says which is selected, and
+          inheritance can be assumed rather than restated.
+          <code>/settings</code> is the exception, because a setting's whole
+          point is the value that wins across scopes.
+        </div>
+      </section>
+
+      <!-- feedback-widget:start -->
+      <section
+        class="feedback"
+        id="feedback"
+        data-artifact="artifacts/plans/2026-08-28-boopervisor-v1.html"
+      >
+        <div class="fbhead">
+          <span class="tag">Feedback</span>
+          <span class="fbstatus" id="fbstatus"></span>
+        </div>
+        <div class="fbrow">
+          <label
+            ><input type="radio" name="fbkind" value="feedback" checked />
+            Feedback</label
+          >
+          <label><input type="radio" name="fbkind" value="rfc" /> RFC</label>
+        </div>
+        <input
+          class="fbtitle"
+          id="fbtitle"
+          type="text"
+          placeholder="One-line title"
+          maxlength="120"
+        />
+        <textarea
+          class="fbbody"
+          id="fbbody"
+          rows="4"
+          placeholder="What would you change, and why?"
+        ></textarea>
+        <div class="fbrow">
+          <button class="fbsubmit" id="fbsubmit" type="button">Submit</button>
+        </div>
+      </section>
+      <style>
+        .feedback {
+          margin-top: 20px;
+          border: 1px solid var(--accents-2);
+          border-radius: 8px;
+          padding: 14px 16px;
+          display: grid;
+          gap: 10px;
+        }
+        .feedback .fbhead {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        }
+        .feedback .tag {
+          font-family: var(--font-mono);
+          font-size: 10.5px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--accents-3);
+        }
+        .feedback .fbstatus {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          color: var(--accents-5);
+        }
+        .feedback .fbrow {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          font-size: 13px;
+        }
+        .feedback input[type="text"],
+        .feedback textarea {
+          font: inherit;
+          font-size: 13px;
+          color: var(--geist-fg);
+          background: var(--geist-bg);
+          border: 1px solid var(--accents-2);
+          border-radius: 6px;
+          padding: 8px 10px;
+          width: 100%;
+          resize: vertical;
+          box-sizing: border-box;
+        }
+        .feedback button {
+          font-family: var(--font-mono);
+          font-size: 12px;
+          color: var(--geist-fg);
+          background: var(--geist-bg);
+          border: 1px solid var(--accents-2);
+          border-radius: 8px;
+          padding: 6px 14px;
+          cursor: pointer;
+        }
+        .feedback button:hover {
+          border-color: var(--accents-3);
+        }
+      </style>
+      <script>
+        (() => {
+          const section = document.getElementById("feedback");
+          const status = document.getElementById("fbstatus");
+          const submit = document.getElementById("fbsubmit");
+          const isFile = location.protocol === "file:";
+          if (isFile) submit.textContent = "copy as issue";
+          submit.addEventListener("click", async () => {
+            const kind = document.querySelector(
+              'input[name="fbkind"]:checked'
+            ).value;
+            const title = document.getElementById("fbtitle").value.trim();
+            const body = document.getElementById("fbbody").value.trim();
+            if (!title || !body) {
+              status.textContent = "title and body required";
+              return;
+            }
+            const artifact = section.dataset.artifact;
+            if (isFile) {
+              const date = new Date().toISOString().slice(0, 10);
+              const md = `# ${title}\n\nStatus: needs-triage\nKind: ${kind}\nArtifact: ${artifact}\nDate: ${date}\n\n${body}\n\n## Comments\n`;
+              try {
+                await navigator.clipboard.writeText(md);
+                status.textContent =
+                  "copied — paste into .scratch/artifact-feedback/issues/";
+              } catch (e) {
+                status.textContent = `copy failed: ${e?.message ?? e}`;
+              }
+              return;
+            }
+            try {
+              const res = await fetch("/api/artifacts/feedback", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ artifact, kind, title, body }),
+              });
+              const data = await res.json();
+              if (res.ok) {
+                status.textContent = `filed: ${data.filed}`;
+                const copy = document.createElement("button");
+                copy.type = "button";
+                copy.textContent = "copy prompt";
+                copy.addEventListener("click", async () => {
+                  try {
+                    await navigator.clipboard.writeText(
+                      `Read the artifact feedback issue at ${data.filed} and act on it per docs/agents/issue-tracker.md.`
+                    );
+                    copy.textContent = "copied";
+                  } catch {
+                    copy.textContent = "copy failed";
+                  }
+                });
+                status.append(" ", copy);
+              } else {
+                status.textContent = `error: ${data.error ?? res.status}`;
+              }
+            } catch (e) {
+              status.textContent = `request failed: ${e?.message ?? e}`;
+            }
+          });
+        })();
+      </script>
+      <!-- feedback-widget:end -->
+    </main>
+  </body>
+</html>

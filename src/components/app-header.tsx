@@ -22,7 +22,10 @@ function isCurrent(pathname: string, href: string) {
 /** The route list, given the path rather than reading it, so it can be rendered alone. */
 export function AppHeaderNav({ pathname }: { pathname: string }) {
   return (
-    <nav aria-label="Sections" className="flex items-center gap-1">
+    <nav
+      aria-label="Sections"
+      className="flex items-center gap-1 overflow-x-auto"
+    >
       {NAV_ITEMS.map((item) => {
         const current = isCurrent(pathname, item.href);
         return (
@@ -51,7 +54,7 @@ export function AppHeader({ scopeSwitcher }: { scopeSwitcher?: ReactNode }) {
   const pathname = usePathname();
   return (
     <header className="border-b border-gray-400 bg-background-100">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-6 px-6">
+      <div className="mx-auto flex min-h-16 w-full max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2 sm:px-6">
         <Link
           href="/settings"
           className="text-sm font-semibold tracking-tight text-gray-1000"
@@ -59,7 +62,9 @@ export function AppHeader({ scopeSwitcher }: { scopeSwitcher?: ReactNode }) {
           Boopervisor
         </Link>
         <AppHeaderNav pathname={pathname} />
-        <div className="ml-auto">{scopeSwitcher}</div>
+        <div className="ml-auto max-sm:order-last max-sm:ml-0 max-sm:w-full">
+          {scopeSwitcher}
+        </div>
       </div>
     </header>
   );

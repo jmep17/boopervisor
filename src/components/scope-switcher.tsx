@@ -57,7 +57,7 @@ export function ScopeSwitcherView({
       onValueChange={(value) =>
         value === ADD_PROJECT_VALUE ? onAddProject() : onSelect(value)
       }
-      className="w-56"
+      className="w-full sm:w-56"
     >
       {scopeOptions(projects).map((option) => (
         <SelectItem key={option.value} value={option.value}>
@@ -138,7 +138,7 @@ export function ScopeSwitcher({
   const [pending, startTransition] = useTransition();
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex w-full items-center gap-2 sm:w-auto">
       <ScopeSwitcherView
         selected={selected}
         projects={projects}

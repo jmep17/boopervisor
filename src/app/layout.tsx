@@ -26,7 +26,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <ScopeSwitcher selected={selected} projects={projects} />
           }
         />
-        <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
           {children}
         </main>
       </body>

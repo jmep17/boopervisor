@@ -126,8 +126,14 @@
   --ds-shadow-small: light-dark(0px 2px 2px #0000000a, 0px 1px 2px #00000029);
   /* `light-dark()` takes exactly two arguments, so a two-layer shadow is a
      light-dark pair per layer. */
-  --ds-shadow-medium-near: light-dark(0px 2px 2px #0000000a, 0px 2px 2px #00000052);
-  --ds-shadow-medium-far: light-dark(0px 8px 8px -8px #0000000a, 0px 8px 8px -8px #00000029);
+  --ds-shadow-medium-near: light-dark(
+    0px 2px 2px #0000000a,
+    0px 2px 2px #00000052
+  );
+  --ds-shadow-medium-far: light-dark(
+    0px 8px 8px -8px #0000000a,
+    0px 8px 8px -8px #00000029
+  );
   --ds-shadow-medium: var(--ds-shadow-medium-near), var(--ds-shadow-medium-far);
   --ds-shadow-large: 0px 2px 2px #0000000a, 0px 8px 16px -4px #0000000a;
 }
@@ -260,16 +266,19 @@
   --radius-large: 12px;
   --radius-fullscreen: 16px;
 
-  --shadow-border: var(--ds-shadow-border-base), var(--ds-shadow-background-border);
+  --shadow-border:
+    var(--ds-shadow-border-base), var(--ds-shadow-background-border);
   --shadow-small: var(--ds-shadow-small);
   --shadow-medium: var(--ds-shadow-medium);
   --shadow-large: var(--ds-shadow-large);
   --shadow-menu:
-    var(--ds-shadow-border-base), 0px 1px 1px #00000005, 0px 4px 8px -4px #0000000a,
-    0px 16px 24px -8px #0000000f, var(--ds-shadow-background-border);
+    var(--ds-shadow-border-base), 0px 1px 1px #00000005,
+    0px 4px 8px -4px #0000000a, 0px 16px 24px -8px #0000000f,
+    var(--ds-shadow-background-border);
   --shadow-modal:
-    var(--ds-shadow-border-base), 0px 1px 1px #00000005, 0px 8px 16px -4px #0000000a,
-    0px 24px 32px -8px #0000000f, var(--ds-shadow-background-border);
+    var(--ds-shadow-border-base), 0px 1px 1px #00000005,
+    0px 8px 16px -4px #0000000a, 0px 24px 32px -8px #0000000f,
+    var(--ds-shadow-background-border);
   --shadow-tooltip:
     var(--ds-shadow-border-base), 0px 1px 1px #00000005, 0px 4px 8px #0000000a,
     var(--ds-shadow-background-border);
@@ -278,9 +287,9 @@
   --font-mono: var(--font-geist-mono);
 
   /* Geist control heights, smallest to largest. */
-  --spacing-control-sm: 32px;
-  --spacing-control-md: 40px;
-  --spacing-control-lg: 48px;
+  --spacing-control-sm: 2rem;
+  --spacing-control-md: 2.5rem;
+  --spacing-control-lg: 3rem;
 }
 
 body {

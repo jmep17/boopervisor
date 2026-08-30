@@ -117,9 +117,9 @@ export function HooksEditorControl({ value }: HooksEditorControlProps) {
                 {hooks[event.event].map((entry, index) => (
                   <div
                     key={index}
-                    className="flex flex-col gap-1 rounded-sm border border-gray-alpha-200 p-2"
+                    className="flex flex-col gap-1 rounded-base border border-gray-alpha-200 p-2"
                   >
-                    <div className="flex flex-col gap-2 text-xs">
+                    <div className="flex flex-col gap-2 text-sm">
                       <div className="flex items-center gap-2">
                         <label className="w-16 font-medium text-gray-900">
                           Matcher:
@@ -167,7 +167,7 @@ export function HooksEditorControl({ value }: HooksEditorControlProps) {
                             placeholder="The command Claude Code runs"
                             className="font-mono"
                           />
-                          <p className="mt-1 text-xs text-gray-800">
+                          <p className="mt-1 text-sm text-gray-900">
                             {scriptPath(entry.command) ? (
                               <>
                                 Runs{" "}
@@ -185,7 +185,7 @@ export function HooksEditorControl({ value }: HooksEditorControlProps) {
                       </div>
                     </div>
                     {errors[`${event.event}-${index}`] && (
-                      <p className="text-xs text-red-900">
+                      <p className="text-sm text-red-900">
                         {errors[`${event.event}-${index}`]}
                       </p>
                     )}
@@ -193,7 +193,7 @@ export function HooksEditorControl({ value }: HooksEditorControlProps) {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-gray-800">
+              <p className="text-sm text-gray-900">
                 No hooks configured for this event.
               </p>
             )}

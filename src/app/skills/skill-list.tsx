@@ -86,11 +86,11 @@ export async function SkillList({
           />
 
           <div className="flex flex-col gap-1">
-            <h3 className="text-xs font-medium text-gray-1000">Metadata</h3>
-            <pre className="overflow-x-auto rounded-base border border-gray-alpha-400 bg-background-200 p-3 font-mono text-xs text-gray-1000">
+            <h3 className="text-sm font-medium text-gray-1000">Metadata</h3>
+            <pre className="overflow-x-auto rounded-base border border-gray-alpha-400 bg-background-200 p-3 font-mono text-sm text-gray-1000">
               {JSON.stringify(skill.skill.metadata, null, 2)}
             </pre>
-            <p className="text-xs text-gray-900">
+            <p className="text-sm text-gray-900">
               Boopervisor manages this skill&apos;s state, not its metadata.
               Edit the SKILL.md file to change its name or description.
             </p>

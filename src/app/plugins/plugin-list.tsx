@@ -67,7 +67,7 @@ export async function PluginList({
             <h2 className="text-sm font-medium text-gray-1000">
               {plugin.plugin.name}
             </h2>
-            <p className="text-xs text-gray-800">{plugin.plugin.marketplace}</p>
+            <p className="text-sm text-gray-900">{plugin.plugin.marketplace}</p>
             <p className="font-mono text-xs text-gray-900">
               {plugin.plugin.manifestPath ??
                 `${plugin.plugin.path}/plugin.json`}
@@ -86,13 +86,13 @@ export async function PluginList({
           />
 
           <div className="flex flex-col gap-1">
-            <h3 className="text-xs font-medium text-gray-1000">Metadata</h3>
-            <pre className="overflow-x-auto rounded-base border border-gray-alpha-400 bg-background-200 p-3 font-mono text-xs text-gray-1000">
+            <h3 className="text-sm font-medium text-gray-1000">Metadata</h3>
+            <pre className="overflow-x-auto rounded-base border border-gray-alpha-400 bg-background-200 p-3 font-mono text-sm text-gray-1000">
               {plugin.plugin.metadata
                 ? JSON.stringify(plugin.plugin.metadata, null, 2)
                 : "plugin.json could not be read."}
             </pre>
-            <p className="text-xs text-gray-900">
+            <p className="text-sm text-gray-900">
               Boopervisor manages this plugin&apos;s state, not its
               configuration. Edit the plugin.json file or uninstall and
               reinstall the plugin to change its configuration.

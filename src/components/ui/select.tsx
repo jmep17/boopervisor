@@ -64,11 +64,13 @@ export function Select({
           position="popper"
           sideOffset={4}
           className={cn(
-            "relative z-50 max-h-64 min-w-[var(--radix-select-trigger-width)] overflow-hidden",
+            "relative z-50 max-h-[min(16rem,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-1rem)] overflow-hidden",
             "rounded-medium bg-background-100 p-1 shadow-menu"
           )}
         >
-          <SelectPrimitive.Viewport>{children}</SelectPrimitive.Viewport>
+          <SelectPrimitive.Viewport className="overflow-y-auto">
+            {children}
+          </SelectPrimitive.Viewport>
         </SelectPrimitive.Content>
       </SelectPrimitive.Portal>
     </SelectPrimitive.Root>

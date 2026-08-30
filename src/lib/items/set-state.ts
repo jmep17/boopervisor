@@ -95,7 +95,7 @@ async function writeArchived(
   location: SettingsLocation,
   archived: boolean
 ): Promise<string | undefined> {
-  const path = archivedItemsPath();
+  const path = archivedItemsPath(location.homeDir);
   const snapshot = await captureFileSnapshot(path);
   const key = itemKey(type, scope, name, location.projectRoot);
   const existing = asRecord(snapshot.content.archivedItems);
@@ -126,6 +126,7 @@ async function writeArchived(
       }
       return { ...content, archivedItems: items };
     },
+    homeDir: location.homeDir,
   });
   return result.ok ? undefined : result.message;
 }

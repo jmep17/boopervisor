@@ -1,9 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { mutateSetting, snapshotScope } from "./mutate-setting";
+import { backupDirectory } from "./mutate";
 import { settingFilePath, type SettingsLocation } from "./settings";
 import { readMutationLog } from "./mutations";
 
@@ -88,6 +89,23 @@ describe("mutateSetting", () => {
       ok: false,
       message: "Managed settings are read-only.",
     });
+  });
+
+  test("records the backup and the mutation under the location's home", async () => {
+    const location = await makeLocation('{"verbose":false}');
+    const result = await mutateSetting({
+      scope: "user",
+      location,
+      key: "verbose",
+      value: true,
+      expected: await snapshotScope("user", location),
+    });
+
+    expect(result.ok).toBe(true);
+    const log = await readMutationLog(location.homeDir);
+    expect(log.length).toBe(1);
+    expect(log[0].target).toMatchObject({ key: "verbose" });
+    expect((await readdir(backupDirectory(location.homeDir))).length).toBe(1);
   });
 });
 

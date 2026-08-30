@@ -11,10 +11,6 @@ import {
 import { setItemState } from "./set-state";
 import { isArchived } from "./item-state";
 
-/**
- * `setItemState` writes archival to `~/.claude/boopervisor.json` under the real home
- * directory, so these tests only assert on the settings file, which the location controls.
- */
 async function makeLocation(userSettings = "{}"): Promise<SettingsLocation> {
   const root = await mkdtemp(join(tmpdir(), "boopervisor-item-"));
   const location = {
@@ -103,6 +99,47 @@ describe("setItemState", () => {
     expect(await readScopeSettings("user", location)).toEqual({
       enabledPlugins: { "a@b": false },
     });
+    expect(
+      await isArchived(
+        "plugin",
+        "user",
+        "a@b",
+        location.projectRoot,
+        location.homeDir
+      )
+    ).toBe(true);
+
+    await setItemState({
+      type: "plugin",
+      name: "a@b",
+      state: "enabled",
+      scope: "user",
+      location,
+    });
+    expect(
+      await isArchived(
+        "plugin",
+        "user",
+        "a@b",
+        location.projectRoot,
+        location.homeDir
+      )
+    ).toBe(false);
+  });
+
+  test("archival is recorded under the location's home", async () => {
+    const location = await makeLocation();
+    await setItemState({
+      type: "plugin",
+      name: "a@b",
+      state: "archived",
+      scope: "user",
+      location,
+    });
+
+    const path = join(location.homeDir!, ".claude", "boopervisor.json");
+    const parsed = JSON.parse(await readFile(path, "utf8"));
+    expect(Object.keys(parsed.archivedItems)).toHaveLength(1);
   });
 });
 

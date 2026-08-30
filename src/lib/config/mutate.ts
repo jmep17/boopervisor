@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
@@ -142,6 +143,10 @@ export async function mutateJsonFile(
 /**
  * A copy of the file as it stands, taken before it is touched. An absent file is backed up
  * as empty, so a restore can return it to not existing in substance if not in name.
+ *
+ * Backups made before the per-file stem existed keep their old `<basename>.<timestamp>.json`
+ * name; they match no stem's prune pattern, so they are never pruned again but stay
+ * restorable through the mutation log.
  */
 async function writeBackup(
   path: string,
@@ -151,15 +156,25 @@ async function writeBackup(
   const directory = backupDirectory(homeDir);
   await mkdir(directory, { recursive: true });
 
-  const name = basename(path);
+  const stem = backupStem(path);
   // A second mutation within the same millisecond would otherwise overwrite the first backup.
-  let backupPath = join(directory, `${name}.${Date.now()}.json`);
+  let backupPath = join(directory, `${stem}.${Date.now()}.json`);
   for (let attempt = 0; await exists(backupPath); attempt += 1) {
-    backupPath = join(directory, `${name}.${Date.now() + attempt + 1}.json`);
+    backupPath = join(directory, `${stem}.${Date.now() + attempt + 1}.json`);
   }
   await writeFile(backupPath, text, "utf8");
-  await pruneBackups(directory, name);
+  await pruneBackups(directory, stem);
   return backupPath;
+}
+
+/**
+ * Backups are named for the file and pruned as a set, so the name must tell two files apart
+ * that share a basename — the user's settings.json and every project's. The path's digest
+ * does that without putting the whole path in a file name.
+ */
+function backupStem(path: string): string {
+  const digest = createHash("sha1").update(path).digest("hex").slice(0, 8);
+  return `${basename(path)}.${digest}`;
 }
 
 async function exists(path: string): Promise<boolean> {
@@ -167,8 +182,8 @@ async function exists(path: string): Promise<boolean> {
 }
 
 /** Keeps the most recent `BACKUP_LIMIT` backups of one file. Failing to prune never fails a write. */
-async function pruneBackups(directory: string, name: string): Promise<void> {
-  const pattern = new RegExp(`^${escapeForRegExp(name)}\\.(\\d+)\\.json$`);
+async function pruneBackups(directory: string, stem: string): Promise<void> {
+  const pattern = new RegExp(`^${escapeForRegExp(stem)}\\.(\\d+)\\.json$`);
   try {
     const matching = (await readdir(directory))
       .map((file) => ({ file, match: pattern.exec(file) }))

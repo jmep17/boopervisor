@@ -48,6 +48,7 @@ export async function mutateSetting(options: {
     expected,
     target: { kind: "setting", scope, project: location.projectRoot, key },
     apply: (content) => applyKey(content, key, value),
+    homeDir: location.homeDir,
   });
 }
 

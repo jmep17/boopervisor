@@ -37,7 +37,7 @@ Out of scope, deliberately:
 - Every mutation checks that the file has not changed since it was read, by mtime and hash,
   and refuses as a stale write if it has.
 - Every mutation writes a backup first, to `~/.claude/.boopervisor-backups/`, named
-  `<file>.<timestamp>.json`, pruned to the most recent 50.
+  `<file>.<path digest>.<timestamp>.json` and pruned to the most recent 50 per file.
 - A History page lists every mutation with a diff, and restores any backup in one action. A
   restore is itself a mutation, and is itself backed up.
 - Known keys are validated against the catalog and invalid writes are refused. Unknown keys

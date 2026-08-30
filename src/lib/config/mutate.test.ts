@@ -9,7 +9,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 
 import {
   BACKUP_LIMIT,
@@ -182,7 +182,7 @@ describe("mutateJsonFile", () => {
     await expect(stat(backupDirectory(homeDir))).rejects.toThrow();
   });
 
-  test("backs the file up as <file>.<timestamp>.json before touching it", async () => {
+  test("backs the file up as <file>.<digest>.<timestamp>.json before touching it", async () => {
     const { path, homeDir } = await makeHome('{"model":"opus"}');
     const result = await write(path, homeDir, (content) => ({
       ...content,
@@ -191,7 +191,9 @@ describe("mutateJsonFile", () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.backupPath).toMatch(/settings\.json\.\d+\.json$/);
+    expect(result.backupPath).toMatch(
+      /settings\.json\.[0-9a-f]{8}\.\d+\.json$/
+    );
     expect(await readFile(result.backupPath, "utf8")).toBe('{"model":"opus"}');
   });
 
@@ -206,6 +208,57 @@ describe("mutateJsonFile", () => {
 
     const backups = await readdir(backupDirectory(homeDir));
     expect(backups.length).toBe(BACKUP_LIMIT);
+  });
+
+  test("two files that share a basename keep separate backup pools", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "boopervisor-mutate-"));
+    const pathA = join(homeDir, "a", "settings.json");
+    const pathB = join(homeDir, "b", "settings.json");
+    await mkdir(join(homeDir, "a"), { recursive: true });
+    await mkdir(join(homeDir, "b"), { recursive: true });
+    await writeFile(pathA, "{}");
+    await writeFile(pathB, "{}");
+
+    let stemA = "";
+    for (let index = 0; index < BACKUP_LIMIT + 1; index += 1) {
+      const result = await write(pathA, homeDir, (content) => ({
+        ...content,
+        [`key${index}`]: index,
+      }));
+      expect(result.ok).toBe(true);
+      if (result.ok) stemA = result.backupPath.replace(/\.\d+\.json$/, "");
+    }
+    const resultB = await write(pathB, homeDir, (content) => ({
+      ...content,
+      key: "b",
+    }));
+    expect(resultB.ok).toBe(true);
+    if (!resultB.ok) return;
+    const stemB = resultB.backupPath.replace(/\.\d+\.json$/, "");
+
+    const backups = await readdir(backupDirectory(homeDir));
+    const backupsA = backups.filter((file) =>
+      file.startsWith(`${basename(stemA)}.`)
+    );
+    const backupsB = backups.filter((file) =>
+      file.startsWith(`${basename(stemB)}.`)
+    );
+    expect(backupsA.length).toBe(BACKUP_LIMIT);
+    expect(backupsB.length).toBe(1);
+  });
+
+  test("the backup name carries the file's digest, not only its basename", async () => {
+    const { path, homeDir } = await makeHome("{}");
+    const result = await write(path, homeDir, (content) => ({
+      ...content,
+      model: "sonnet",
+    }));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.backupPath).toMatch(
+      /settings\.json\.[0-9a-f]{8}\.\d+\.json$/
+    );
   });
 
   test("records the mutation with enough to render a diff and to restore", async () => {

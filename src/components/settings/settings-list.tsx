@@ -70,15 +70,17 @@ export async function SettingsList() {
           {fileStatuses.map((status) => (
             <li
               key={status.path}
-              className="flex items-baseline justify-between gap-4"
+              className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
             >
-              <span className="text-gray-900">
+              <span className="min-w-0 text-gray-900">
                 {SCOPE_LABELS[status.scope]}
-                <span className="ml-2 font-mono text-gray-800">
+                <span className="ml-2 break-all font-mono text-gray-800">
                   {status.path}
                 </span>
               </span>
-              <span className="text-gray-900">{FILE_STATES[status.state]}</span>
+              <span className="shrink-0 text-gray-900">
+                {FILE_STATES[status.state]}
+              </span>
             </li>
           ))}
         </ul>

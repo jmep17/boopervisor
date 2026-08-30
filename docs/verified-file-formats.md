@@ -73,6 +73,23 @@ Three details that change behaviour:
   `serverName`. Boopervisor writes `serverName` and recognises a server denied by name; a
   server denied by command or URL is not yet recognised as disabled.
 
+## The hooks key
+
+Three nesting levels, not two. `hooks` is an object keyed by event; each value is an array of
+`{ matcher, hooks }` groups; each group's `hooks` array holds actions with their own `type`
+([hooks](https://code.claude.com/docs/en/hooks)). `matcher` is optional and only meaningful on
+tool-related events — absent or `"*"` means every occurrence.
+
+A `command` action carries `command` (string) and optionally `timeout` (seconds) and `async`
+(Boolean). The other documented types — `prompt`, `agent`, `http`, `mcp_tool` — carry their
+own fields (`prompt`/`model`; `url`/`headers`/`allowedEnvVars`/`timeout`; `server`/`tool`/
+`input`). Boopervisor edits `command` hooks as a form and preserves every other type's fields
+untouched, shown read-only.
+
+A flat `{ matcher, command }` entry — the shape this file used to assume — is not valid and is
+refused rather than silently accepted. A `hooks` value the parser cannot read is never
+replaced with an empty one: the editor falls back to showing the value as JSON.
+
 ## Custom output styles
 
 `~/.claude/output-styles` at user level, `.claude/output-styles` at project level, one
@@ -96,15 +113,16 @@ plainly that Claude Code **does not** read the legacy Windows path
 
 ## What this changed
 
-| Assumption                                                                      | Verdict                                                                                                                                               |
-| :------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Plugin manifest at `.claude-plugin/plugin.json`                                 | Confirmed. The root fallback is undocumented and kept only as a courtesy.                                                                             |
-| `SKILL.md` frontmatter needs handling for block scalars                         | Not documented, but true of real files here. Kept.                                                                                                    |
-| `skillOverrides` disables with `"off"` or `"hidden"`                            | **Wrong.** There is no `"hidden"`. The four states are `"on"`, `"name-only"`, `"user-invocable-only"`, `"off"`, and only `"off"` disables. Corrected. |
-| A skill with no `name` in its frontmatter can be skipped                        | **Wrong.** Every field is optional; the directory names the skill. Corrected.                                                                         |
-| Custom output styles are `~/.claude/output-styles/*.md`, named by file          | Half right. The path is correct; the name comes from frontmatter when it is set. Corrected, and the built-in styles are now offered too.              |
-| Windows managed settings at `C:\ProgramData\ClaudeCode\`                        | **Wrong**, and explicitly so: that is the legacy path Claude Code does not read. Corrected to `C:\Program Files\ClaudeCode\`.                         |
-| `enabledPlugins`, `deniedMcpServers`, `disabled`/`enabledMcpjsonServers` shapes | Confirmed against the reference.                                                                                                                      |
+| Assumption                                                                      | Verdict                                                                                                                                                                 |
+| :------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Plugin manifest at `.claude-plugin/plugin.json`                                 | Confirmed. The root fallback is undocumented and kept only as a courtesy.                                                                                               |
+| `SKILL.md` frontmatter needs handling for block scalars                         | Not documented, but true of real files here. Kept.                                                                                                                      |
+| `skillOverrides` disables with `"off"` or `"hidden"`                            | **Wrong.** There is no `"hidden"`. The four states are `"on"`, `"name-only"`, `"user-invocable-only"`, `"off"`, and only `"off"` disables. Corrected.                   |
+| A skill with no `name` in its frontmatter can be skipped                        | **Wrong.** Every field is optional; the directory names the skill. Corrected.                                                                                           |
+| Custom output styles are `~/.claude/output-styles/*.md`, named by file          | Half right. The path is correct; the name comes from frontmatter when it is set. Corrected, and the built-in styles are now offered too.                                |
+| Windows managed settings at `C:\ProgramData\ClaudeCode\`                        | **Wrong**, and explicitly so: that is the legacy path Claude Code does not read. Corrected to `C:\Program Files\ClaudeCode\`.                                           |
+| `enabledPlugins`, `deniedMcpServers`, `disabled`/`enabledMcpjsonServers` shapes | Confirmed against the reference.                                                                                                                                        |
+| `hooks` is a flat list of `{ matcher, command }` per event                      | **Wrong.** Groups carry a `hooks` array of typed actions; a flat entry is refused, and a value the parser cannot read is shown as JSON rather than replaced. Corrected. |
 
 ## Still unverified
 

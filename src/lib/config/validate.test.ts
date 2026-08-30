@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { validateSetting, isValidationOk } from "./validate";
+import { getSetting } from "@/lib/catalog";
 import type { SettingDefinition } from "@/lib/catalog";
 
 // Helper to create a test setting definition
@@ -146,6 +147,28 @@ describe("validateSetting", () => {
     expect(validateSetting("anything", setting)).toEqual({ ok: true });
     expect(validateSetting(123, setting)).toEqual({ ok: true });
     expect(validateSetting(null, setting)).toEqual({ ok: true });
+  });
+});
+
+describe("validateSetting for hooks", () => {
+  test("accepts the documented nested shape", () => {
+    const setting = getSetting("hooks")!;
+    const value = {
+      SessionStart: [
+        { hooks: [{ type: "command", command: "/x.sh", timeout: 30 }] },
+      ],
+    };
+    expect(validateSetting(value, setting)).toEqual({ ok: true });
+  });
+
+  test("rejects the flat { matcher, command } shape", () => {
+    const setting = getSetting("hooks")!;
+    const value = { SessionStart: [{ matcher: "", command: "/x.sh" }] };
+    const result = validateSetting(value, setting);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.problem).toContain("hooks");
+    }
   });
 });
 

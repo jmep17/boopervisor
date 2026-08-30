@@ -1,14 +1,25 @@
 import type { ValidationResult } from "./validate";
 
-export interface HookEntry {
-  event: string;
-  matcher: string;
-  command: string;
+/** One action Claude Code runs. Only `command` hooks are edited as a form; the rest are preserved as found. */
+export interface HookAction {
+  type: string;
+  command?: string;
+  timeout?: number;
+  [field: string]: unknown;
 }
+
+/** A `{ matcher, hooks }` group. `matcher` is optional: absent or "*" means every occurrence. */
+export interface HookGroup {
+  matcher?: string;
+  hooks: HookAction[];
+  [field: string]: unknown;
+}
+
+export type HooksByEvent = Record<string, HookGroup[]>;
 
 export interface ParsedHooks {
   ok: true;
-  hooks: Record<string, Array<{ matcher: string; command: string }>>;
+  hooks: HooksByEvent;
 }
 
 export interface ParseHooksError {
@@ -18,121 +29,146 @@ export interface ParseHooksError {
 
 export type ParseHooksResult = ParsedHooks | ParseHooksError;
 
-/** Validates a single hook entry has all required fields. */
-export function validateHookEntry(entry: unknown): ValidationResult {
-  if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-    return { ok: false, problem: "Hook entry must be an object." };
-  }
-
-  const obj = entry as Record<string, unknown>;
-
-  // Check required fields
-  if (typeof obj.event !== "string") {
-    return { ok: false, problem: "Hook entry must have a string event." };
-  }
-
-  if (typeof obj.command !== "string") {
-    return { ok: false, problem: "Hook entry must have a string command." };
-  }
-
-  // matcher is optional, but if present must be a string
-  if (obj.matcher !== undefined && typeof obj.matcher !== "string") {
-    return { ok: false, problem: "Hook entry matcher must be a string." };
-  }
-
-  return { ok: true };
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/** Parses a hooks object into event → entries map. */
-export function parseHooksObject(value: unknown): ParseHooksResult {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return { ok: false, problem: "Hooks must be an object keyed by event." };
+/** Parses one hook action. `command` hooks are checked; everything else is kept as found. */
+function parseHookAction(
+  actionValue: unknown,
+  event: string,
+  groupIndex: number,
+  actionIndex: number
+): { ok: true; action: HookAction } | ParseHooksError {
+  const where = `hooks.${event}[${groupIndex}].hooks[${actionIndex}]`;
+
+  if (!isPlainObject(actionValue) || typeof actionValue.type !== "string") {
+    return { ok: false, problem: `${where} must have a string "type".` };
   }
 
-  const obj = value as Record<string, unknown>;
-  const hooks: Record<string, Array<{ matcher: string; command: string }>> = {};
+  if (actionValue.type === "command") {
+    if (typeof actionValue.command !== "string" || actionValue.command === "") {
+      return { ok: false, problem: `${where} must have a command.` };
+    }
+    if (
+      actionValue.timeout !== undefined &&
+      (typeof actionValue.timeout !== "number" ||
+        !Number.isFinite(actionValue.timeout))
+    ) {
+      return { ok: false, problem: `${where} timeout must be a number.` };
+    }
+  }
 
-  for (const [event, entries] of Object.entries(obj)) {
-    if (!Array.isArray(entries)) {
-      return { ok: false, problem: `Hooks[${event}] must be an array.` };
+  return {
+    ok: true,
+    action: { ...actionValue, type: actionValue.type } as HookAction,
+  };
+}
+
+/** Parses one `{ matcher, hooks }` group. */
+function parseHookGroup(
+  groupValue: unknown,
+  event: string,
+  groupIndex: number
+): { ok: true; group: HookGroup } | ParseHooksError {
+  const where = `hooks.${event}[${groupIndex}]`;
+
+  if (!isPlainObject(groupValue) || !Array.isArray(groupValue.hooks)) {
+    return {
+      ok: false,
+      problem: `${where} is not a { "matcher", "hooks" } group.`,
+    };
+  }
+
+  if (
+    groupValue.matcher !== undefined &&
+    typeof groupValue.matcher !== "string"
+  ) {
+    return { ok: false, problem: `${where} matcher must be a string.` };
+  }
+
+  const actions: HookAction[] = [];
+  for (
+    let actionIndex = 0;
+    actionIndex < groupValue.hooks.length;
+    actionIndex++
+  ) {
+    const parsed = parseHookAction(
+      groupValue.hooks[actionIndex],
+      event,
+      groupIndex,
+      actionIndex
+    );
+    if (!parsed.ok) return parsed;
+    actions.push(parsed.action);
+  }
+
+  const rest = { ...groupValue };
+  delete rest.hooks;
+  return { ok: true, group: { ...rest, hooks: actions } as HookGroup };
+}
+
+/** Parses a hooks object into the documented event → { matcher, hooks } shape. */
+export function parseHooksObject(value: unknown): ParseHooksResult {
+  if (value === undefined) {
+    return { ok: true, hooks: {} };
+  }
+
+  if (!isPlainObject(value)) {
+    return { ok: false, problem: "hooks must be an object keyed by event." };
+  }
+
+  const hooks: HooksByEvent = {};
+
+  for (const [event, groupsValue] of Object.entries(value)) {
+    if (!Array.isArray(groupsValue)) {
+      return { ok: false, problem: `hooks.${event} must be an array.` };
     }
 
-    const hookEntries: Array<{ matcher: string; command: string }> = [];
-    for (const entry of entries) {
-      if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-        return {
-          ok: false,
-          problem: `Hook entry in ${event} must be an object.`,
-        };
-      }
-
-      const entryObj = entry as Record<string, unknown>;
-      if (typeof entryObj.command !== "string") {
-        return {
-          ok: false,
-          problem: `Hook entry in ${event} must have a command.`,
-        };
-      }
-
-      const matcher = entryObj.matcher ?? "";
-      if (typeof matcher !== "string") {
-        return {
-          ok: false,
-          problem: `Hook entry in ${event} matcher must be a string.`,
-        };
-      }
-
-      hookEntries.push({
-        matcher,
-        command: entryObj.command,
-      });
+    const groups: HookGroup[] = [];
+    // An event the catalog does not know is preserved, not refused — Claude Code may
+    // document events we haven't caught up to yet, and the file should still round-trip.
+    for (let groupIndex = 0; groupIndex < groupsValue.length; groupIndex++) {
+      const parsed = parseHookGroup(groupsValue[groupIndex], event, groupIndex);
+      if (!parsed.ok) return parsed;
+      groups.push(parsed.group);
     }
 
-    if (hookEntries.length > 0) {
-      hooks[event] = hookEntries;
-    }
+    hooks[event] = groups;
   }
 
   return { ok: true, hooks };
 }
 
-/** Validates a hooks object and all its entries. */
+/** Validates a hooks object against the documented shape. */
 export function validateHooksObject(value: unknown): ValidationResult {
   const parsed = parseHooksObject(value);
   if (!parsed.ok) {
     return { ok: false, problem: parsed.problem };
   }
-
-  const { hooks } = parsed;
-
-  // Validate each entry
-  for (const [event, entries] of Object.entries(hooks)) {
-    for (const entry of entries) {
-      const validation = validateHookEntry({
-        event,
-        ...entry,
-      });
-      if (!validation.ok) {
-        return {
-          ok: false,
-          problem: `Invalid hook entry in ${event}: ${validation.problem}`,
-        };
-      }
-    }
-  }
-
   return { ok: true };
 }
 
-/** Assembles event → entries map back into a hooks object. */
+/** Assembles the event → { matcher, hooks } map back into the object Claude Code reads. */
 export function assembleHooksObject(
-  hooks: Record<string, Array<{ matcher: string; command: string }>>
+  hooks: HooksByEvent
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
-  for (const [event, entries] of Object.entries(hooks)) {
-    if (entries.length > 0) {
-      result[event] = entries;
+  for (const [event, groups] of Object.entries(hooks)) {
+    const assembledGroups = groups
+      .filter((group) => group.hooks.length > 0)
+      .map((group) => {
+        const { matcher, hooks: actions, ...rest } = group;
+        return {
+          ...rest,
+          ...(matcher ? { matcher } : {}),
+          hooks: actions,
+        };
+      });
+
+    if (assembledGroups.length > 0) {
+      result[event] = assembledGroups;
     }
   }
 

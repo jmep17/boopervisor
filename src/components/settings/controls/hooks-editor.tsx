@@ -117,7 +117,7 @@ export function HooksEditorControl({ value }: HooksEditorControlProps) {
                 {hooks[event.event].map((entry, index) => (
                   <div
                     key={index}
-                    className="flex flex-col gap-1 rounded-sm border border-gray-alpha-200 p-2"
+                    className="flex flex-col gap-1 rounded-base border border-gray-alpha-200 p-2"
                   >
                     <div className="flex flex-col gap-2 text-xs">
                       <div className="flex items-center gap-2">

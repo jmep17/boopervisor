@@ -67,7 +67,7 @@ export function HistoryRow({
           {diff.length > 0 ? (
             <div className="flex flex-col gap-2">
               <p className="text-xs font-medium text-gray-900">Changes:</p>
-              <pre className="max-h-64 overflow-auto rounded-base bg-gray-50 p-3 text-xs font-mono text-gray-1000">
+              <pre className="max-h-64 overflow-auto rounded-base bg-background-200 p-3 text-xs font-mono text-gray-1000">
                 {diff.map((line, idx) => (
                   <div
                     key={idx}
@@ -127,7 +127,7 @@ export function HistoryRow({
             <input type="hidden" name="expected" value={expectedFile} />
 
             {state.error ? (
-              <div className="rounded-base bg-red-50 p-3 text-sm text-red-700">
+              <div className="rounded-base bg-red-100 p-3 text-sm text-red-900">
                 {state.error}
               </div>
             ) : null}

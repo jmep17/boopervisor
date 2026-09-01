@@ -9,11 +9,11 @@ export default function SettingsPage() {
         title="Settings"
         description="Every documented Claude Code setting, its effective value, and the scope that won."
       />
-      <div className="p-6">
-        <Suspense fallback={<div>Loading settings...</div>}>
-          <SettingsList />
-        </Suspense>
-      </div>
+      <Suspense
+        fallback={<p className="text-sm text-gray-900">Reading settings…</p>}
+      >
+        <SettingsList />
+      </Suspense>
     </>
   );
 }

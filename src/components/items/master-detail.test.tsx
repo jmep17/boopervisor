@@ -62,4 +62,17 @@ describe("MasterDetail", () => {
     );
     expect(screen.getByText("Nothing here.")).toBeInTheDocument();
   });
+
+  test("offers a way back to the list when an item is selected, keeping the archived filter", () => {
+    renderList({ selectedId: "beta", showArchived: true });
+    expect(screen.getByRole("link", { name: "All items" })).toHaveAttribute(
+      "href",
+      "?archived=1"
+    );
+  });
+
+  test("offers no way back when nothing is selected", () => {
+    renderList();
+    expect(screen.queryByRole("link", { name: "All items" })).toBeNull();
+  });
 });

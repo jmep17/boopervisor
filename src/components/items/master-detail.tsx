@@ -49,8 +49,8 @@ export function MasterDetail({
   ).length;
 
   return (
-    <div className="grid grid-cols-[16rem_1fr] gap-6">
-      <div className="flex flex-col gap-2">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-[16rem_1fr]">
+      <div className={cn("flex flex-col gap-2", selectedId && "max-md:hidden")}>
         <ul className="flex flex-col gap-1">
           {visible.map((item) => (
             <li key={item.id}>
@@ -96,7 +96,22 @@ export function MasterDetail({
         ) : null}
       </div>
 
-      <div className="min-w-0">{children}</div>
+      <div
+        className={cn(
+          "flex min-w-0 flex-col gap-4",
+          !selectedId && "max-md:hidden"
+        )}
+      >
+        {selectedId ? (
+          <Link
+            href={itemHref(undefined, showArchived)}
+            className="w-fit text-sm text-gray-900 underline-offset-2 hover:underline md:hidden"
+          >
+            All items
+          </Link>
+        ) : null}
+        {children}
+      </div>
     </div>
   );
 }

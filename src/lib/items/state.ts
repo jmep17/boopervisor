@@ -1,5 +1,6 @@
 import type { Scope } from "@/lib/catalog";
 import type { SettingsResolution } from "@/lib/config/effective";
+import type { McpSource } from "@/lib/config/mcp-servers";
 import { isArchived, type ItemState, type ItemType } from "./item-state";
 import { isDisabledBySettings } from "./mechanism";
 
@@ -12,10 +13,11 @@ export async function itemState(
   name: string,
   scope: Scope,
   resolution: SettingsResolution,
-  project?: string
+  project?: string,
+  source?: McpSource
 ): Promise<ItemState> {
   if (await isArchived(type, scope, name, project)) return "archived";
-  return isDisabledBySettings(type, name, scope, resolution)
+  return isDisabledBySettings(type, name, scope, resolution, source)
     ? "disabled"
     : "enabled";
 }

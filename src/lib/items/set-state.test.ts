@@ -72,6 +72,77 @@ describe("setItemState", () => {
     });
   });
 
+  test("disabling a local-scope MCP server writes deniedMcpServers too", async () => {
+    const location = await makeLocation();
+    await setItemState({
+      type: "mcp",
+      name: "test-local",
+      state: "disabled",
+      scope: "project",
+      location,
+      source: "local",
+    });
+
+    expect(await readScopeSettings("project", location)).toEqual({
+      deniedMcpServers: [{ serverName: "test-local" }],
+    });
+  });
+
+  test("disabling a project .mcp.json server still uses disabledMcpjsonServers", async () => {
+    const location = await makeLocation();
+    await setItemState({
+      type: "mcp",
+      name: "project-server",
+      state: "disabled",
+      scope: "project",
+      location,
+      source: "project",
+    });
+
+    expect(await readScopeSettings("project", location)).toEqual({
+      disabledMcpjsonServers: ["project-server"],
+    });
+  });
+
+  test("archiving a local server keys the archive by its source, not just its name", async () => {
+    const location = await makeLocation();
+    await setItemState({
+      type: "mcp",
+      name: "shared-name",
+      state: "archived",
+      scope: "project",
+      location,
+      source: "local",
+    });
+    await setItemState({
+      type: "mcp",
+      name: "shared-name",
+      state: "archived",
+      scope: "project",
+      location,
+      source: "project",
+    });
+
+    expect(
+      await isArchived(
+        "mcp",
+        "project",
+        "local:shared-name",
+        location.projectRoot,
+        location.homeDir
+      )
+    ).toBe(true);
+    expect(
+      await isArchived(
+        "mcp",
+        "project",
+        "shared-name",
+        location.projectRoot,
+        location.homeDir
+      )
+    ).toBe(true);
+  });
+
   test("a state an item is already in writes nothing at all", async () => {
     const location = await makeLocation('{"model":"opus"}');
     const path = settingFilePath("user", location);

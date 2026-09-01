@@ -3,6 +3,7 @@ import type {
   EffectiveValue,
   SettingsResolution,
 } from "@/lib/config/effective";
+import type { McpSource } from "@/lib/config/mcp-servers";
 import type { ItemType } from "./item-state";
 
 /**
@@ -88,13 +89,29 @@ const ENABLED_PLUGINS: DisablingMechanism = {
 };
 
 /**
+ * MCP servers are disabled differently depending on where they came from: a `.mcp.json`
+ * server by the key Claude Code has for exactly that, everything else (a user-scope server
+ * and a project's local-scope server alike) by name in `deniedMcpServers`.
+ *
+ * Per Step 1's spike (settings-reference.md, checked 2026-09-01): `deniedMcpServers` "Block
+ * specific MCP servers by URL, command, or name" applies to any MCP server regardless of
+ * source, so a local-scope server gets the same controls a user-scope one does.
+ */
+export function mcpMechanismFor(source: McpSource): DisablingMechanism {
+  return source === "project" ? DISABLED_MCPJSON : DENIED_MCP;
+}
+
+/**
  * MCP servers are disabled differently depending on where they came from: a user-scope
  * server by name, a project's `.mcp.json` server by the key Claude Code has for exactly that.
+ *
+ * This is the fallback used when only a scope is known, not a source (skills, plugins, and
+ * any MCP caller that has not been updated to pass a source through).
  */
 export function mechanismFor(type: ItemType, scope: Scope): DisablingMechanism {
   if (type === "skill") return SKILL_OVERRIDES;
   if (type === "plugin") return ENABLED_PLUGINS;
-  return scope === "user" ? DENIED_MCP : DISABLED_MCPJSON;
+  return mcpMechanismFor(scope === "user" ? "user" : "project");
 }
 
 /** The key's effective value and which scope supplied it, or nothing when it is unset. */
@@ -109,9 +126,13 @@ export function isDisabledBySettings(
   type: ItemType,
   name: string,
   scope: Scope,
-  resolution: SettingsResolution
+  resolution: SettingsResolution,
+  source?: McpSource
 ): boolean {
-  const mechanism = mechanismFor(type, scope);
+  const mechanism =
+    type === "mcp" && source
+      ? mcpMechanismFor(source)
+      : mechanismFor(type, scope);
   return mechanism.disables(
     effective(resolution, mechanism.key)?.effectiveValue,
     name
@@ -126,9 +147,13 @@ export function whyDisabled(
   type: ItemType,
   name: string,
   scope: Scope,
-  resolution: SettingsResolution
+  resolution: SettingsResolution,
+  source?: McpSource
 ): Scope | undefined {
-  const mechanism = mechanismFor(type, scope);
+  const mechanism =
+    type === "mcp" && source
+      ? mcpMechanismFor(source)
+      : mechanismFor(type, scope);
   const value = effective(resolution, mechanism.key);
   return value && mechanism.disables(value.effectiveValue, name)
     ? value.winningScope

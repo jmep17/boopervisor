@@ -9,6 +9,7 @@ import {
 } from "@/lib/config/settings";
 import { mcpMechanismFor, mechanismFor } from "./mechanism";
 import {
+  archivalName,
   archivedItemsPath,
   itemKey,
   type ItemState,
@@ -55,12 +56,11 @@ export async function setItemState({
   );
   if (settingsProblem) return { error: settingsProblem };
 
-  // A local and a `.mcp.json` server can share a name in the same project; the archive key
-  // must not conflate them, so a local server's archive name carries its source.
-  const archivalName = source === "local" ? `local:${name}` : name;
   const archivalProblem = await writeArchived(
     type,
-    archivalName,
+    // A local and a `.mcp.json` server can share a name in the same project; the archive
+    // key must not conflate them, so a local server's archive name carries its source.
+    archivalName(name, source),
     scope,
     location,
     archived

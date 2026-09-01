@@ -5,11 +5,13 @@ import { join } from "node:path";
 
 import {
   readScopeSettings,
+  resolveEffectiveSettings,
   settingFilePath,
   type SettingsLocation,
 } from "@/lib/config/settings";
 import { setItemState } from "./set-state";
 import { isArchived } from "./item-state";
+import { itemState } from "./state";
 
 async function makeLocation(userSettings = "{}"): Promise<SettingsLocation> {
   const root = await mkdtemp(join(tmpdir(), "boopervisor-item-"));
@@ -141,6 +143,67 @@ describe("setItemState", () => {
         location.homeDir
       )
     ).toBe(true);
+  });
+
+  test("itemState reports an archived local server as archived, not by its plain name", async () => {
+    const location = await makeLocation();
+    await setItemState({
+      type: "mcp",
+      name: "test-local",
+      state: "archived",
+      scope: "project",
+      location,
+      source: "local",
+    });
+
+    const resolution = await resolveEffectiveSettings(location);
+    expect(
+      await itemState(
+        "mcp",
+        "test-local",
+        "project",
+        resolution,
+        location.projectRoot,
+        "local",
+        location.homeDir
+      )
+    ).toBe("archived");
+  });
+
+  test("archiving a project .mcp.json server does not archive a same-named local server", async () => {
+    const location = await makeLocation();
+    await setItemState({
+      type: "mcp",
+      name: "shared-name",
+      state: "archived",
+      scope: "project",
+      location,
+      source: "project",
+    });
+
+    const resolution = await resolveEffectiveSettings(location);
+    expect(
+      await itemState(
+        "mcp",
+        "shared-name",
+        "project",
+        resolution,
+        location.projectRoot,
+        "local",
+        location.homeDir
+      )
+    ).toBe("enabled");
+    expect(
+      await itemState(
+        "mcp",
+        "shared-name",
+        "project",
+        resolution,
+        location.projectRoot,
+        "project",
+        location.homeDir
+      )
+    ).toBe("archived");
   });
 
   test("a state an item is already in writes nothing at all", async () => {

@@ -59,6 +59,19 @@ export async function readItemState(
 }
 
 /**
+ * The name an item is archived under. A local-scope MCP server and a project's `.mcp.json`
+ * server can share a name in the same project, so the archive key must not conflate them —
+ * a local server's archive name carries its source. Every caller that reads or writes
+ * archival state for an MCP server must go through this, or the two can shadow each other.
+ */
+export function archivalName(
+  name: string,
+  source?: "user" | "project" | "local"
+): string {
+  return source === "local" ? `local:${name}` : name;
+}
+
+/**
  * Generate a unique key for an item in the archive.
  * Format: type:scope[:project]:name (project is included only if provided).
  */

@@ -50,6 +50,16 @@ describe("the mechanism Claude Code disables each item type with", () => {
     expect(mechanism.disables({ caveman: "off" }, "caveman")).toBe(true);
   });
 
+  test('only "off" disables a skill; the narrowing states do not', () => {
+    const mechanism = mechanismFor("skill", "user");
+    expect(mechanism.disables({ caveman: "off" }, "caveman")).toBe(true);
+    expect(mechanism.disables({ caveman: "name-only" }, "caveman")).toBe(false);
+    expect(
+      mechanism.disables({ caveman: "user-invocable-only" }, "caveman")
+    ).toBe(false);
+    expect(mechanism.disables({ caveman: "hidden" }, "caveman")).toBe(false);
+  });
+
   test("a plugin is set false in enabledPlugins", () => {
     const mechanism = mechanismFor("plugin", "user");
     expect(mechanism.disable(undefined, "diagrams@second-brain")).toEqual({

@@ -68,6 +68,21 @@ describe("settingFilePath", () => {
   });
 });
 
+describe("managedSettingsPath", () => {
+  test("names the documented location on each platform", () => {
+    expect(managedSettingsPath("darwin")).toBe(
+      "/Library/Application Support/ClaudeCode/managed-settings.json"
+    );
+    expect(managedSettingsPath("linux")).toBe(
+      "/etc/claude-code/managed-settings.json"
+    );
+    // The ProgramData path is the legacy one Claude Code does not read.
+    expect(managedSettingsPath("win32")).toBe(
+      "C:\\Program Files\\ClaudeCode\\managed-settings.json"
+    );
+  });
+});
+
 describe("readSettingsFile", () => {
   test("reports missing, empty and malformed rather than throwing", async () => {
     const location = await makeLocation({

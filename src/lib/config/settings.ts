@@ -39,7 +39,7 @@ export function managedSettingsPath(
   if (platform === "darwin")
     return "/Library/Application Support/ClaudeCode/managed-settings.json";
   if (platform === "win32")
-    return "C:\\ProgramData\\ClaudeCode\\managed-settings.json";
+    return "C:\\Program Files\\ClaudeCode\\managed-settings.json";
   return "/etc/claude-code/managed-settings.json";
 }
 

@@ -9,8 +9,10 @@ which is why the server has to run locally.
 
 ## Status
 
-Scaffolded. Nothing is implemented yet. See `docs/PLAN.md` for the agreed design and
-`docs/adr/` for the decisions that are settled.
+Working, for a single user on one machine: settings at every scope, skills, plugins, MCP
+servers and a history with restore. See `docs/PLAN.md` for the agreed design, `docs/adr/`
+for the decisions that are settled, and `docs/verified-file-formats.md` for which
+assumptions about Claude Code's files have been checked.
 
 ## Running
 
@@ -20,6 +22,9 @@ bun dev
 ```
 
 Then open http://localhost:3000.
+
+The server listens on 127.0.0.1 only: it edits files under your home directory and must not
+be reachable from other machines.
 
 ## What it covers
 

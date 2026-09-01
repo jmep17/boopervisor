@@ -66,8 +66,7 @@ const DISABLED_MCPJSON: DisablingMechanism = {
 /** A skill turned off in `skillOverrides`, which maps a skill's name to how it is treated. */
 const SKILL_OVERRIDES: DisablingMechanism = {
   key: "skillOverrides",
-  disables: (value, name) =>
-    asObject(value)[name] === "off" || asObject(value)[name] === "hidden",
+  disables: (value, name) => asObject(value)[name] === "off",
   disable: (current, name) => ({ ...asObject(current), [name]: "off" }),
   enable: (current, name) => {
     const next = { ...asObject(current) };

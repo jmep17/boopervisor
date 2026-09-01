@@ -1,4 +1,8 @@
-import { encodeExpectedFile, captureFileSnapshot } from "@/lib/config/mutate";
+import {
+  encodeExpectedFile,
+  captureFileSnapshot,
+  exists,
+} from "@/lib/config/mutate";
 import { readMutationLog } from "@/lib/config/mutations";
 import { HistoryRow } from "./history-row";
 
@@ -23,13 +27,7 @@ export async function HistoryList() {
 
   for (const record of log) {
     if (!(record.backupPath in backupExists)) {
-      try {
-        backupExists[record.backupPath] = await Bun.file(
-          record.backupPath
-        ).exists();
-      } catch {
-        backupExists[record.backupPath] = false;
-      }
+      backupExists[record.backupPath] = await exists(record.backupPath);
     }
 
     if (!(record.path in fileSnapshots)) {

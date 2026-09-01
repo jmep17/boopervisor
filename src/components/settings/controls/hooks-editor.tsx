@@ -167,7 +167,7 @@ function GroupEditor({
   };
 
   return (
-    <div className="flex flex-col gap-2 rounded-sm border border-gray-alpha-200 p-2">
+    <div className="flex flex-col gap-2 rounded-base border border-gray-alpha-200 p-2">
       <div className="flex items-center gap-2 text-xs">
         <label className="w-16 font-medium text-gray-900">Matcher:</label>
         <Input

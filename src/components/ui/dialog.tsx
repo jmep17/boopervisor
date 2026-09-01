@@ -24,9 +24,10 @@ export function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2",
-          "flex flex-col gap-4 rounded-medium bg-background-100 p-6 shadow-modal outline-none",
-          className,
+          "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2",
+          "max-h-[calc(100dvh-2rem)] overflow-y-auto",
+          "flex flex-col gap-4 rounded-medium bg-background-100 p-4 shadow-modal outline-none sm:p-6",
+          className
         )}
         {...props}
       >
@@ -35,7 +36,7 @@ export function DialogContent({
           className={cn(
             "absolute right-4 top-4 rounded-base p-1 text-gray-900 transition-colors",
             "hover:bg-gray-alpha-100 hover:text-gray-1000",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900"
           )}
         >
           <XIcon className="size-4" />

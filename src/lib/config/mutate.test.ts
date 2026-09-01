@@ -302,6 +302,30 @@ describe("mutateJsonFile", () => {
     expect(fileStats.mode & 0o777).toBe(0o600);
     expect(dirStats.mode & 0o777).toBe(0o700);
   });
+
+  test("does not leave a temporary file behind after a successful write", async () => {
+    const { path, homeDir } = await makeHome('{"model":"opus"}');
+    const result = await write(path, homeDir, (content) => ({
+      ...content,
+      model: "sonnet",
+    }));
+
+    expect(result.ok).toBe(true);
+    const entries = await readdir(join(homeDir, ".claude"));
+    expect(entries.some((entry) => /\.tmp$/.test(entry))).toBe(false);
+  });
+
+  test("returns io-error rather than throwing when the target directory cannot be created", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "boopervisor-mutate-"));
+    // A file where a directory needs to exist means mkdir(recursive) fails.
+    const blocker = join(homeDir, ".claude");
+    await writeFile(blocker, "not a directory");
+    const path = join(blocker, "settings.json");
+
+    const result = await write(path, homeDir, () => ({ model: "opus" }));
+
+    expect(result).toMatchObject({ ok: false, problem: "io-error" });
+  });
 });
 
 describe("the expected-file token", () => {

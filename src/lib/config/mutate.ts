@@ -1,5 +1,12 @@
 import { createHash } from "node:crypto";
-import { access, mkdir, readdir, rm, writeFile } from "node:fs/promises";
+import {
+  access,
+  mkdir,
+  readdir,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
 
@@ -123,7 +130,7 @@ export async function mutateJsonFile(
   try {
     const backupPath = await writeBackup(path, current.text, homeDir);
     await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, text, "utf8");
+    await writeFileAtomically(path, text);
 
     const record: MutationRecord = {
       timestamp: new Date().toISOString(),
@@ -141,6 +148,22 @@ export async function mutateJsonFile(
       problem: "io-error",
       message: (error as Error).message,
     };
+  }
+}
+
+/**
+ * The target is either its old contents or its new ones, never half of each: the text goes
+ * to a temporary file beside it and is renamed over it, and rename within a directory is
+ * atomic. The backup taken a moment earlier covers the case where even this fails.
+ */
+async function writeFileAtomically(path: string, text: string): Promise<void> {
+  const tmp = join(dirname(path), `.${basename(path)}.${process.pid}.tmp`);
+  try {
+    await writeFile(tmp, text, "utf8");
+    await rename(tmp, path);
+  } catch (error) {
+    await rm(tmp, { force: true });
+    throw error;
   }
 }
 

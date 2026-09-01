@@ -349,7 +349,13 @@ describe("preserves a file it does not own", () => {
     const after = await readFile(path, "utf8");
     const afterObj = JSON.parse(after);
 
-    // Verify every field outside mcpServers is untouched
+    expect(Object.keys(afterObj)).toEqual([
+      "projects",
+      "sessionState",
+      "mcpServers",
+      "onboardingFlags",
+      "userID",
+    ]);
     expect(afterObj.projects).toEqual({
       "/path/to/project1": {
         history: ["entry1", "entry2"],
@@ -367,38 +373,21 @@ describe("preserves a file it does not own", () => {
     });
     expect(afterObj.userID).toBe("user-123");
 
-    // Verify servers are correct
-    expect(afterObj.mcpServers["server-a"]).toEqual({
-      command: "node",
-      args: ["server.js"],
-    });
-    expect(afterObj.mcpServers["server-b"]).toEqual({
-      url: "http://localhost:3000",
-    });
-    expect(afterObj.mcpServers["server-c"]).toEqual({
-      command: "python",
+    expect(afterObj.mcpServers).toEqual({
+      "server-a": { command: "node", args: ["server.js"] },
+      "server-b": { url: "http://localhost:3000" },
+      "server-c": { command: "python" },
     });
 
-    // Verify formatting: indentation should be preserved (2 spaces)
     expect(after).toContain('  "projects"');
     expect(after).toContain('    "history"');
-
-    // Verify trailing newline is preserved
     expect(after.endsWith("\n")).toBe(true);
 
-    // Verify key order is roughly preserved (before/after tests)
+    // The added server contributes exactly three lines (key, one field, closing
+    // brace); any other delta means the writer reformatted more than it touched.
     const beforeLines = original.split("\n");
     const afterLines = after.split("\n");
-
-    // The file should have same number of lines (approximately)
-    expect(Math.abs(beforeLines.length - afterLines.length)).toBeLessThan(5);
-
-    // Verify every byte outside mcpServers is identical
-    expect(Object.keys(afterObj)).toContain("projects");
-    expect(Object.keys(afterObj)).toContain("sessionState");
-    expect(Object.keys(afterObj)).toContain("mcpServers");
-    expect(Object.keys(afterObj)).toContain("onboardingFlags");
-    expect(Object.keys(afterObj)).toContain("userID");
+    expect(afterLines.length).toBe(beforeLines.length + 3);
   });
 
   test("a file with unusual key order and indentation round-trips in its own shape", async () => {
@@ -423,11 +412,8 @@ describe("preserves a file it does not own", () => {
 
     const after = await readFile(path, "utf8");
 
-    // Verify 4-space indentation is preserved
     expect(after).toContain('    "userID"');
     expect(after).toContain('        "srv"');
-
-    // Verify other fields unchanged
     expect(after).toContain('"projects": {}');
     expect(after).toContain('"other": "value"');
   });

@@ -3,6 +3,9 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  listProjectMcpServers,
+  readLocalScopeMcpServers,
+  readMcpJsonApprovals,
   readProjectScopeMcpServers,
   readUserScopeMcpServers,
 } from "./mcp-servers";
@@ -130,5 +133,152 @@ describe("readProjectScopeMcpServers", () => {
     await writeFile(path, JSON.stringify({ mcpServers: [] }));
     const result = await readProjectScopeMcpServers(projectPath);
     expect(result).toEqual({});
+  });
+});
+
+describe("readLocalScopeMcpServers", () => {
+  let home: string;
+  let projectPath: string;
+
+  beforeEach(async () => {
+    home = await mkdtemp(join(tmpdir(), "boopervisor-mcp-home-"));
+    projectPath = "/Users/example/my-project";
+  });
+
+  afterEach(async () => {
+    await rm(home, { recursive: true, force: true });
+  });
+
+  test("returns empty object when ~/.claude.json is absent", async () => {
+    const result = await readLocalScopeMcpServers(projectPath, home);
+    expect(result).toEqual({});
+  });
+
+  test("returns empty object when the project is not in the map", async () => {
+    const path = join(home, ".claude.json");
+    await writeFile(path, JSON.stringify({ projects: {} }));
+    const result = await readLocalScopeMcpServers(projectPath, home);
+    expect(result).toEqual({});
+  });
+
+  test("returns empty object when mcpServers is absent from the project entry", async () => {
+    const path = join(home, ".claude.json");
+    await writeFile(
+      path,
+      JSON.stringify({ projects: { [projectPath]: { allowedTools: [] } } })
+    );
+    const result = await readLocalScopeMcpServers(projectPath, home);
+    expect(result).toEqual({});
+  });
+
+  test("reads projects[path].mcpServers", async () => {
+    const path = join(home, ".claude.json");
+    const content = {
+      projects: {
+        [projectPath]: {
+          mcpServers: {
+            "local-server": { command: "npx", args: ["thing"] },
+          },
+        },
+      },
+    };
+    await writeFile(path, JSON.stringify(content));
+    const result = await readLocalScopeMcpServers(projectPath, home);
+    expect(result).toEqual({
+      "local-server": { command: "npx", args: ["thing"] },
+    });
+  });
+
+  test("a selection path with a trailing slash still finds the entry", async () => {
+    const path = join(home, ".claude.json");
+    const content = {
+      projects: {
+        [projectPath]: {
+          mcpServers: { "local-server": { command: "npx" } },
+        },
+      },
+    };
+    await writeFile(path, JSON.stringify(content));
+    const result = await readLocalScopeMcpServers(`${projectPath}/`, home);
+    expect(result).toEqual({ "local-server": { command: "npx" } });
+  });
+});
+
+describe("readMcpJsonApprovals", () => {
+  let home: string;
+  const projectPath = "/Users/example/my-project";
+
+  beforeEach(async () => {
+    home = await mkdtemp(join(tmpdir(), "boopervisor-mcp-approvals-"));
+  });
+
+  afterEach(async () => {
+    await rm(home, { recursive: true, force: true });
+  });
+
+  test("returns empty lists when ~/.claude.json is absent", async () => {
+    const result = await readMcpJsonApprovals(projectPath, home);
+    expect(result).toEqual({ enabled: [], disabled: [] });
+  });
+
+  test("returns empty lists when the project has no record", async () => {
+    const path = join(home, ".claude.json");
+    await writeFile(path, JSON.stringify({ projects: { [projectPath]: {} } }));
+    const result = await readMcpJsonApprovals(projectPath, home);
+    expect(result).toEqual({ enabled: [], disabled: [] });
+  });
+
+  test("reads both enabled and disabled lists", async () => {
+    const path = join(home, ".claude.json");
+    const content = {
+      projects: {
+        [projectPath]: {
+          enabledMcpjsonServers: ["stripe"],
+          disabledMcpjsonServers: ["shady"],
+        },
+      },
+    };
+    await writeFile(path, JSON.stringify(content));
+    const result = await readMcpJsonApprovals(projectPath, home);
+    expect(result).toEqual({ enabled: ["stripe"], disabled: ["shady"] });
+  });
+});
+
+describe("listProjectMcpServers", () => {
+  test("prefixes ids by source and sets the right file for each", () => {
+    const rows = listProjectMcpServers(
+      { "project-server": { command: "a" } },
+      { "local-server": { command: "b" } },
+      "/Users/example/my-project"
+    );
+    expect(rows).toEqual([
+      {
+        id: "project:project-server",
+        name: "project-server",
+        source: "project",
+        file: "/Users/example/my-project/.mcp.json",
+        configuration: { command: "a" },
+      },
+      {
+        id: "local:local-server",
+        name: "local-server",
+        source: "local",
+        file: "~/.claude.json",
+        configuration: { command: "b" },
+      },
+    ]);
+  });
+
+  test("a name present in both sources yields two rows", () => {
+    const rows = listProjectMcpServers(
+      { shared: { command: "a" } },
+      { shared: { command: "b" } },
+      "/proj"
+    );
+    expect(rows).toHaveLength(2);
+    expect(rows.map((row) => row.id)).toEqual([
+      "project:shared",
+      "local:shared",
+    ]);
   });
 });

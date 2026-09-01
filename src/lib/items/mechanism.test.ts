@@ -1,7 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
 import type { SettingsResolution } from "@/lib/config/effective";
-import { isDisabledBySettings, mechanismFor, whyDisabled } from "./mechanism";
+import {
+  isDisabledBySettings,
+  mcpMechanismFor,
+  mechanismFor,
+  whyDisabled,
+} from "./mechanism";
 
 /** A resolution holding one key, as if it had been read from the given scope's file. */
 function resolution(
@@ -91,6 +96,34 @@ describe("the mechanism Claude Code disables each item type with", () => {
     const denied = [{ serverName: "playwright" }];
     expect(mechanismFor("mcp", "user").disable(denied, "playwright")).toBe(
       denied
+    );
+  });
+});
+
+describe("mcpMechanismFor", () => {
+  test("a local-scope server is denied by name, same as user scope", () => {
+    expect(mcpMechanismFor("local").key).toBe("deniedMcpServers");
+    expect(mcpMechanismFor("user").key).toBe("deniedMcpServers");
+  });
+
+  test("a project's .mcp.json server is disabled by its own key", () => {
+    expect(mcpMechanismFor("project").key).toBe("disabledMcpjsonServers");
+  });
+
+  test("mechanismFor('mcp', 'project') is unchanged", () => {
+    expect(mechanismFor("mcp", "project").key).toBe("disabledMcpjsonServers");
+    expect(mechanismFor("mcp", "user").key).toBe("deniedMcpServers");
+  });
+
+  test("isDisabledBySettings and whyDisabled use the source's mechanism when given one", () => {
+    const denied = resolution("deniedMcpServers", [
+      { serverName: "test-local" },
+    ]);
+    expect(
+      isDisabledBySettings("mcp", "test-local", "project", denied, "local")
+    ).toBe(true);
+    expect(whyDisabled("mcp", "test-local", "project", denied, "local")).toBe(
+      "user"
     );
   });
 });

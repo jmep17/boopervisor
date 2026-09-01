@@ -1,13 +1,15 @@
 import type { Scope } from "@/lib/catalog";
 import { captureFileSnapshot } from "@/lib/config/json-file";
+import type { McpSource } from "@/lib/config/mcp-servers";
 import { mutateJsonFile } from "@/lib/config/mutate";
 import { mutateSetting, snapshotScope } from "@/lib/config/mutate-setting";
 import {
   readScopeSettings,
   type SettingsLocation,
 } from "@/lib/config/settings";
-import { mechanismFor } from "./mechanism";
+import { mcpMechanismFor, mechanismFor } from "./mechanism";
 import {
+  archivalName,
   archivedItemsPath,
   itemKey,
   type ItemState,
@@ -30,6 +32,7 @@ export async function setItemState({
   state,
   scope,
   location,
+  source,
 }: {
   type: ItemType;
   name: string;
@@ -37,6 +40,8 @@ export async function setItemState({
   /** The scope the header selects, which is where a disable is written. */
   scope: Scope;
   location: SettingsLocation;
+  /** For an MCP server, where it is defined. Chooses the disabling mechanism. */
+  source?: McpSource;
 }): Promise<{ error?: string }> {
   const archived = state === "archived";
   const disable = archived || state === "disabled";
@@ -46,13 +51,16 @@ export async function setItemState({
     name,
     scope,
     location,
-    disable
+    disable,
+    source
   );
   if (settingsProblem) return { error: settingsProblem };
 
   const archivalProblem = await writeArchived(
     type,
-    name,
+    // A local and a `.mcp.json` server can share a name in the same project; the archive
+    // key must not conflate them, so a local server's archive name carries its source.
+    archivalName(name, source),
     scope,
     location,
     archived
@@ -66,9 +74,13 @@ async function writeDisabled(
   name: string,
   scope: Scope,
   location: SettingsLocation,
-  disabled: boolean
+  disabled: boolean,
+  source?: McpSource
 ): Promise<string | undefined> {
-  const mechanism = mechanismFor(type, scope);
+  const mechanism =
+    type === "mcp" && source
+      ? mcpMechanismFor(source)
+      : mechanismFor(type, scope);
   const current = (await readScopeSettings(scope, location))[mechanism.key];
 
   const next = disabled

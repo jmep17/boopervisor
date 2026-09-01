@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import type { McpSource } from "@/lib/config/mcp-servers";
 import type { SettingsLocation } from "@/lib/config/settings";
 import { getSelectedScope } from "@/lib/scope/server";
 import { setItemState } from "./set-state";
@@ -28,6 +29,13 @@ export async function changeItemState(
   const type = String(formData.get("type") ?? "") as ItemType;
   const name = String(formData.get("name") ?? "");
   const state = String(formData.get("state") ?? "") as ItemState;
+  const sourceField = formData.get("source");
+  const source =
+    sourceField === "user" ||
+    sourceField === "project" ||
+    sourceField === "local"
+      ? (sourceField as McpSource)
+      : undefined;
 
   if (!(type in PAGES))
     return { error: "That is not a kind of item Boopervisor manages." };
@@ -42,7 +50,14 @@ export async function changeItemState(
   };
   const scope = selected.kind === "project" ? "project" : "user";
 
-  const result = await setItemState({ type, name, state, scope, location });
+  const result = await setItemState({
+    type,
+    name,
+    state,
+    scope,
+    location,
+    source,
+  });
   if (result.error) return result;
 
   revalidatePath(PAGES[type]);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { isOverridden, type EffectiveValue } from "@/lib/config/effective";
 import type { OptionSource, Scope, SettingDefinition } from "@/lib/catalog";
 import { SCOPE_LABELS } from "./scope-labels";
 import { ControlComponent } from "./control-component";
+import { ConfirmWriteDialog } from "./confirm-write-dialog";
+import { SettingDetails } from "./setting-details";
 
 export interface SettingRowProps {
   /** Absent for a key found on disk that the catalog does not describe. */
@@ -45,6 +47,9 @@ export function SettingRow({
   const { key, effectiveValue, winningScope, perScope } = effective;
   const isSet = Object.keys(perScope).length > 0;
   const overridden = isOverridden(effective, editing);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [confirming, setConfirming] = useState(false);
+  const dangerous = definition?.dangerous ?? false;
 
   return (
     <details className="group rounded-base border border-gray-alpha-400 bg-background-100">
@@ -75,10 +80,17 @@ export function SettingRow({
               Uncatalogued
             </Badge>
           )}
+          {dangerous ? (
+            <Badge tone="warning" className="shrink-0">
+              Confirms before writing
+            </Badge>
+          ) : null}
         </span>
       </summary>
 
       <div className="flex flex-col gap-4 border-t border-gray-alpha-400 px-4 py-4">
+        {definition ? <SettingDetails definition={definition} /> : null}
+
         <dl className="flex flex-col gap-1 text-sm">
           {(Object.keys(SCOPE_LABELS) as Scope[])
             .filter((scope) => scope in perScope)
@@ -109,7 +121,7 @@ export function SettingRow({
             Boopervisor only reads them.
           </p>
         ) : (
-          <form action={submit} className="flex flex-col gap-3">
+          <form ref={formRef} action={submit} className="flex flex-col gap-3">
             <input type="hidden" name="key" value={key} />
             <input type="hidden" name="scope" value={editing} />
             <input type="hidden" name="expected" value={expected} />
@@ -131,9 +143,19 @@ export function SettingRow({
             </Field>
 
             <div className="flex items-center gap-2">
-              <Button type="submit" disabled={pending}>
-                {pending ? "Saving" : "Save"}
-              </Button>
+              {dangerous ? (
+                <Button
+                  type="button"
+                  onClick={() => setConfirming(true)}
+                  disabled={pending}
+                >
+                  {pending ? "Saving" : "Save"}
+                </Button>
+              ) : (
+                <Button type="submit" disabled={pending}>
+                  {pending ? "Saving" : "Save"}
+                </Button>
+              )}
               {editing in perScope ? (
                 <Button
                   type="submit"
@@ -148,6 +170,20 @@ export function SettingRow({
             </div>
           </form>
         )}
+
+        {definition?.dangerous ? (
+          <ConfirmWriteDialog
+            open={confirming}
+            onOpenChange={setConfirming}
+            settingKey={key}
+            reason={definition.overrideNote}
+            pending={pending}
+            onConfirm={() => {
+              setConfirming(false);
+              formRef.current?.requestSubmit();
+            }}
+          />
+        ) : null}
       </div>
     </details>
   );

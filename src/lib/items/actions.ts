@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import type { McpSource } from "@/lib/config/mcp-servers";
+import { decodeExpectedFile } from "@/lib/config/mutate";
 import type { SettingsLocation } from "@/lib/config/settings";
 import { getSelectedScope } from "@/lib/scope/server";
 import { setItemState } from "./set-state";
@@ -57,6 +58,12 @@ export async function changeItemState(
     scope,
     location,
     source,
+    expectedSettings: decodeExpectedFile(
+      String(formData.get("expectedSettings") ?? "")
+    ),
+    expectedArchive: decodeExpectedFile(
+      String(formData.get("expectedArchive") ?? "")
+    ),
   });
   if (result.error) return result;
 

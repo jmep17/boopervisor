@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import {
+  assembleHooksObject,
   parseHooksObject,
   validateHooksObject,
-  validateHookEntry,
 } from "./hooks";
 import type { ValidationResult } from "./validate";
 
@@ -11,163 +11,188 @@ function problemOf(result: ValidationResult): string {
   return result.ok ? "" : result.problem;
 }
 
-describe("validateHookEntry", () => {
-  test("accepts a valid hook entry with required fields", () => {
-    const entry = {
-      event: "SessionStart",
-      matcher: "",
-      command: "/path/to/script.sh",
-    };
-    const result = validateHookEntry(entry);
-    expect(result.ok).toBe(true);
-  });
-
-  test("accepts a hook entry with matcher", () => {
-    const entry = {
-      event: "UserPromptSubmit",
-      matcher: "deploy",
-      command: "/path/to/deploy.sh",
-    };
-    const result = validateHookEntry(entry);
-    expect(result.ok).toBe(true);
-  });
-
-  test("rejects entry missing event", () => {
-    const entry = {
-      matcher: "",
-      command: "/path/to/script.sh",
-    };
-    const result = validateHookEntry(entry as Record<string, unknown>);
-    expect(result.ok).toBe(false);
-    expect(problemOf(result)).toContain("event");
-  });
-
-  test("rejects entry missing command", () => {
-    const entry = {
-      event: "SessionStart",
-      matcher: "",
-    };
-    const result = validateHookEntry(entry as Record<string, unknown>);
-    expect(result.ok).toBe(false);
-    expect(problemOf(result)).toContain("command");
-  });
-
-  test("rejects entry with non-string event", () => {
-    const entry = {
-      event: 123,
-      matcher: "",
-      command: "/path/to/script.sh",
-    };
-    const result = validateHookEntry(entry as Record<string, unknown>);
-    expect(result.ok).toBe(false);
-  });
-
-  test("rejects entry with non-string command", () => {
-    const entry = {
-      event: "SessionStart",
-      matcher: "",
-      command: 123,
-    };
-    const result = validateHookEntry(entry as Record<string, unknown>);
-    expect(result.ok).toBe(false);
-  });
-});
-
 describe("parseHooksObject", () => {
-  test("parses a valid hooks object", () => {
-    const obj = {
-      SessionStart: [{ matcher: "", command: "/path/to/script.sh" }],
-      UserPromptSubmit: [{ matcher: "deploy", command: "/path/to/deploy.sh" }],
+  test("accepts a documented value", () => {
+    const value = {
+      SessionStart: [
+        { hooks: [{ type: "command", command: "/x.sh", timeout: 30 }] },
+      ],
     };
-    const result = parseHooksObject(obj);
+    const result = parseHooksObject(value);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(Object.keys(result.hooks).length).toBe(2);
-      expect(result.hooks.SessionStart).toBeDefined();
-      expect(result.hooks.UserPromptSubmit).toBeDefined();
+      expect(result.hooks.SessionStart[0].hooks[0].timeout).toBe(30);
     }
   });
 
-  test("handles empty object", () => {
-    const result = parseHooksObject({});
+  test("accepts a matcher on a tool event", () => {
+    const value = {
+      PreToolUse: [
+        { matcher: "Bash", hooks: [{ type: "command", command: "echo hi" }] },
+      ],
+    };
+    const result = parseHooksObject(value);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(Object.keys(result.hooks).length).toBe(0);
+      expect(result.hooks.PreToolUse[0].matcher).toBe("Bash");
     }
   });
 
-  test("rejects non-object input", () => {
+  test("preserves a non-command hook and its fields", () => {
+    const value = {
+      Stop: [{ hooks: [{ type: "prompt", prompt: "Check", model: "haiku" }] }],
+    };
+    const result = parseHooksObject(value);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(assembleHooksObject(result.hooks)).toEqual(value);
+    }
+  });
+
+  test("preserves an unknown field on a group and on a hook", () => {
+    const value = {
+      Stop: [
+        {
+          note: "kept",
+          hooks: [{ type: "command", command: "/x.sh", extra: "kept-too" }],
+        },
+      ],
+    };
+    const result = parseHooksObject(value);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(assembleHooksObject(result.hooks)).toEqual(value);
+    }
+  });
+
+  test("accepts an event the catalog does not list and keeps it", () => {
+    const value = {
+      SomethingNew: [{ hooks: [{ type: "command", command: "/x.sh" }] }],
+    };
+    const result = parseHooksObject(value);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.hooks.SomethingNew).toBeDefined();
+    }
+  });
+
+  test("regression: refuses the flat shape", () => {
+    const value = {
+      SessionStart: [{ matcher: "", command: "/x.sh" }],
+    };
+    const result = parseHooksObject(value);
+    expect(result.ok).toBe(false);
+    expect(problemOf(result)).toContain("hooks");
+  });
+
+  test("refuses a command hook without command, naming the event", () => {
+    const value = {
+      SessionStart: [{ hooks: [{ type: "command" }] }],
+    };
+    const result = parseHooksObject(value);
+    expect(result.ok).toBe(false);
+    expect(problemOf(result)).toContain("SessionStart");
+  });
+
+  test("refuses a hook without a string type", () => {
+    const value = {
+      SessionStart: [{ hooks: [{ command: "/x.sh" }] }],
+    };
+    const result = parseHooksObject(value);
+    expect(result.ok).toBe(false);
+  });
+
+  test("refuses a non-number timeout", () => {
+    const value = {
+      SessionStart: [
+        { hooks: [{ type: "command", command: "/x.sh", timeout: "soon" }] },
+      ],
+    };
+    const result = parseHooksObject(value);
+    expect(result.ok).toBe(false);
+  });
+
+  test("refuses a non-array event value", () => {
+    const value = { SessionStart: "not an array" };
+    const result = parseHooksObject(value as Record<string, unknown>);
+    expect(result.ok).toBe(false);
+  });
+
+  test("refuses a non-object top level", () => {
     expect(parseHooksObject(null).ok).toBe(false);
-    expect(parseHooksObject(undefined).ok).toBe(false);
     expect(parseHooksObject("string").ok).toBe(false);
     expect(parseHooksObject([]).ok).toBe(false);
   });
 
-  test("rejects event with non-array value", () => {
-    const obj = {
-      SessionStart: "not an array",
-    };
-    const result = parseHooksObject(obj as Record<string, unknown>);
-    expect(result.ok).toBe(false);
+  test("undefined and {} parse to {}", () => {
+    const undefinedResult = parseHooksObject(undefined);
+    expect(undefinedResult.ok).toBe(true);
+    if (undefinedResult.ok) expect(undefinedResult.hooks).toEqual({});
+
+    const emptyResult = parseHooksObject({});
+    expect(emptyResult.ok).toBe(true);
+    if (emptyResult.ok) expect(emptyResult.hooks).toEqual({});
   });
 
-  test("validates all entries in all events", () => {
-    const obj = {
+  test("round-trip: a real-world value survives unchanged", () => {
+    const value = {
       SessionStart: [
-        { matcher: "", command: "/path/to/script.sh" },
-        { event: "SessionStart", matcher: "", command: "/path/to/other.sh" },
+        {
+          hooks: [
+            {
+              type: "command",
+              command: "python3 ~/.claude/hooks/x.py",
+              timeout: 30,
+            },
+          ],
+        },
       ],
     };
-    const result = parseHooksObject(obj);
-    // The entries should be extracted as { matcher, command } pairs
+    const result = parseHooksObject(value);
     expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(assembleHooksObject(result.hooks)).toEqual(value);
+    }
   });
 });
 
 describe("validateHooksObject", () => {
-  test("accepts a valid hooks object", () => {
-    const obj = {
+  test("accepts a documented value", () => {
+    const value = {
       SessionStart: [
-        { event: "SessionStart", matcher: "", command: "/path/to/script.sh" },
+        { hooks: [{ type: "command", command: "/x.sh", timeout: 30 }] },
       ],
     };
-    const result = validateHooksObject(obj);
-    expect(result.ok).toBe(true);
+    expect(validateHooksObject(value).ok).toBe(true);
   });
 
-  test("rejects object with invalid entry in event", () => {
-    const obj = {
-      SessionStart: [
-        { event: "SessionStart", matcher: "", command: "/path/to/script.sh" },
-        { event: "SessionStart", matcher: "" }, // Missing command
-      ],
+  test("rejects the flat shape", () => {
+    const value = {
+      SessionStart: [{ matcher: "", command: "/x.sh" }],
     };
-    const result = validateHooksObject(obj);
+    const result = validateHooksObject(value);
     expect(result.ok).toBe(false);
+    expect(problemOf(result)).toContain("hooks");
   });
+});
 
-  test("rejects object with non-object entry", () => {
-    const obj = {
-      SessionStart: ["not an object"],
-    };
-    const result = validateHooksObject(obj as Record<string, unknown>);
-    expect(result.ok).toBe(false);
-  });
-
-  test("validates all entries across all events", () => {
-    const obj = {
-      SessionStart: [
-        { event: "SessionStart", matcher: "", command: "/path/to/script.sh" },
-      ],
-      UserPromptSubmit: [
+describe("assembleHooksObject", () => {
+  test("drops empty events and empty groups, omits an empty-string matcher", () => {
+    const hooks = {
+      Empty: [],
+      HasEmptyGroup: [{ matcher: "", hooks: [] }],
+      Kept: [
         {
-          event: "UserPromptSubmit",
-          matcher: "deploy",
-          command: "/path/to/deploy.sh",
+          matcher: "",
+          hooks: [{ type: "command" as const, command: "/x.sh" }],
         },
       ],
     };
-    const result = validateHooksObject(obj);
-    expect(result.ok).toBe(true);
+    const assembled = assembleHooksObject(hooks);
+    expect(assembled.Empty).toBeUndefined();
+    expect(assembled.HasEmptyGroup).toBeUndefined();
+    expect(assembled.Kept).toEqual([
+      { hooks: [{ type: "command", command: "/x.sh" }] },
+    ]);
   });
 });

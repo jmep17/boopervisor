@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HooksEditorControl } from "./hooks-editor";
 
@@ -13,148 +13,141 @@ function hiddenValue(): string {
 }
 
 describe("HooksEditorControl", () => {
-  test("renders hook events from the catalog", () => {
+  test("renders hook events from the catalog when value is undefined", () => {
     render(<HooksEditorControl value={undefined} />);
     expect(screen.getByText("SessionStart")).toBeInTheDocument();
     expect(screen.getByText("UserPromptSubmit")).toBeInTheDocument();
-  });
-
-  test("initializes with parsed hooks object", () => {
-    const value = {
-      SessionStart: [{ matcher: "", command: "/path/to/setup.sh" }],
-    };
-    render(<HooksEditorControl value={value} />);
-
-    const inputs = screen.getAllByRole("textbox") as HTMLInputElement[];
-    expect(inputs.some((i) => i.value === "/path/to/setup.sh")).toBe(true);
-  });
-
-  test("renders empty when value is undefined", () => {
-    render(<HooksEditorControl value={undefined} />);
-    // Should have event sections but no entries
-    expect(screen.getByText("SessionStart")).toBeInTheDocument();
     expect(screen.getAllByText(/No hooks configured/).length).toBeGreaterThan(
       0
     );
   });
 
-  test("adds new hook entries when Add button is clicked", async () => {
-    const user = userEvent.setup();
-    render(<HooksEditorControl value={undefined} />);
-
-    // Find the Add hook button for SessionStart
-    const sessionStartSection = screen.getByText("SessionStart").closest("div");
-    const addButton = sessionStartSection!.querySelector(
-      'button[type="button"]'
-    ) as HTMLButtonElement;
-    await user.click(addButton);
-
-    // Should now have a matcher input visible
-    expect(
-      screen.getByPlaceholderText("Optional pattern match")
-    ).toBeInTheDocument();
-  });
-
-  test("removes hook entries when remove button is clicked", async () => {
-    const user = userEvent.setup();
+  test("shows the command from a documented value in a textbox", () => {
     render(
       <HooksEditorControl
         value={{
-          SessionStart: [{ matcher: "pattern", command: "/path/to/script.sh" }],
-        }}
-      />
-    );
-
-    // Verify matcher is there initially
-    expect(screen.getByDisplayValue("pattern")).toBeInTheDocument();
-
-    const removeButton = screen.getByRole("button", { name: /remove hook/i });
-    await user.click(removeButton);
-
-    // The matcher input should be gone
-    expect(screen.queryByDisplayValue("pattern")).not.toBeInTheDocument();
-  });
-
-  test("edits matcher when text is typed", async () => {
-    const user = userEvent.setup();
-    render(
-      <HooksEditorControl
-        value={{
-          UserPromptSubmit: [
-            { matcher: "deploy", command: "/path/to/deploy.sh" },
+          SessionStart: [
+            { hooks: [{ type: "command", command: "/path/to/setup.sh" }] },
           ],
         }}
       />
     );
 
-    const matcherInput = screen.getByPlaceholderText(
-      "Optional pattern match"
-    ) as HTMLInputElement;
-    await user.clear(matcherInput);
-    await user.type(matcherInput, "test");
-
-    const submitted = JSON.parse(hiddenValue());
-    expect(submitted.UserPromptSubmit[0].matcher).toBe("test");
+    const inputs = screen.getAllByRole("textbox") as HTMLInputElement[];
+    expect(inputs.some((i) => i.value === "/path/to/setup.sh")).toBe(true);
   });
 
-  test("names the script a command runs, which Boopervisor never writes", () => {
-    render(
-      <HooksEditorControl
-        value={{
-          SessionStart: [{ matcher: "", command: "/path/to/script.sh" }],
-        }}
-      />
-    );
-
-    expect(screen.getByText(/\/path\/to\/script\.sh/)).toBeInTheDocument();
-    expect(screen.getByText(/never writes that file/)).toBeInTheDocument();
-  });
-
-  test("the command itself is edited here, so a hook added here can run something", async () => {
+  test("editing the command updates the hidden field to the nested shape", async () => {
     const user = userEvent.setup();
     render(
       <HooksEditorControl
-        value={{ SessionStart: [{ matcher: "", command: "" }] }}
+        value={{
+          SessionStart: [
+            { hooks: [{ type: "command", command: "/before.sh" }] },
+          ],
+        }}
       />
     );
 
     const command = screen.getByPlaceholderText("The command Claude Code runs");
+    await user.clear(command);
     await user.type(command, "/bin/echo hi");
 
-    expect(JSON.parse(hiddenValue()).SessionStart[0].command).toBe(
-      "/bin/echo hi"
-    );
+    expect(JSON.parse(hiddenValue())).toEqual({
+      SessionStart: [{ hooks: [{ type: "command", command: "/bin/echo hi" }] }],
+    });
   });
 
-  test("carries the whole structure to the server as JSON", () => {
+  test("Add group then Add command hook then typing a command yields a nested group", async () => {
+    const user = userEvent.setup();
+    render(<HooksEditorControl value={undefined} />);
+
+    const sessionStartHeading = screen.getByText("SessionStart");
+    const sessionStartSection = sessionStartHeading.closest(
+      ".rounded-base.border.border-gray-alpha-300"
+    ) as HTMLElement;
+    const addGroupButton = within(sessionStartSection).getByRole("button", {
+      name: /add group/i,
+    });
+    await user.click(addGroupButton);
+
+    const addHookButton = within(sessionStartSection).getByRole("button", {
+      name: /add command hook/i,
+    });
+    await user.click(addHookButton);
+
+    const command = within(sessionStartSection).getByPlaceholderText(
+      "The command Claude Code runs"
+    );
+    await user.type(command, "/bin/echo hi");
+
+    const submitted = JSON.parse(hiddenValue());
+    expect(submitted.SessionStart[0].hooks[0]).toEqual({
+      type: "command",
+      command: "/bin/echo hi",
+    });
+  });
+
+  test("a prompt hook is shown read-only and survives untouched", async () => {
+    const user = userEvent.setup();
     render(
       <HooksEditorControl
         value={{
-          SessionStart: [{ matcher: "", command: "/path/to/setup.sh" }],
-          UserPromptSubmit: [
-            { matcher: "deploy", command: "/path/to/deploy.sh" },
+          Stop: [
+            {
+              hooks: [
+                { type: "command", command: "/before.sh" },
+                { type: "prompt", prompt: "Check", model: "haiku" },
+              ],
+            },
           ],
         }}
       />
     );
 
+    expect(screen.getByText(/A prompt hook/)).toBeInTheDocument();
+
+    const command = screen.getByPlaceholderText("The command Claude Code runs");
+    await user.clear(command);
+    await user.type(command, "/after.sh");
+
     const submitted = JSON.parse(hiddenValue());
-    expect(submitted.SessionStart).toBeDefined();
-    expect(submitted.SessionStart[0].command).toBe("/path/to/setup.sh");
-    expect(submitted.UserPromptSubmit[0].matcher).toBe("deploy");
+    expect(submitted.Stop[0].hooks[1]).toEqual({
+      type: "prompt",
+      prompt: "Check",
+      model: "haiku",
+    });
+    expect(submitted.Stop[0].hooks[0]).toEqual({
+      type: "command",
+      command: "/after.sh",
+    });
   });
 
-  test("omits events with no hooks from the submitted value", () => {
+  test("regression: an unparseable value renders the JSON fallback with the original value", () => {
+    const value = { SessionStart: [{ matcher: "", command: "/x.sh" }] };
+    render(<HooksEditorControl value={value} />);
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    const textarea = document.querySelector(
+      'textarea[name="value"]'
+    ) as HTMLTextAreaElement;
+    expect(textarea).toBeInTheDocument();
+    expect(JSON.parse(textarea.value)).toEqual(value);
+    expect(
+      document.querySelector('input[type="hidden"][name="value"]')
+    ).not.toBeInTheDocument();
+  });
+
+  test("an unknown event in the value is rendered with the Not in the catalog badge", () => {
     render(
       <HooksEditorControl
         value={{
-          SessionStart: [{ matcher: "", command: "/path/to/setup.sh" }],
+          SomethingNew: [{ hooks: [{ type: "command", command: "/x.sh" }] }],
         }}
       />
     );
 
-    const submitted = JSON.parse(hiddenValue());
-    expect(submitted.SessionStart).toBeDefined();
-    expect(submitted.UserPromptSubmit).toBeUndefined();
+    expect(screen.getByText("SomethingNew")).toBeInTheDocument();
+    expect(screen.getByText("Not in the catalog")).toBeInTheDocument();
   });
 });

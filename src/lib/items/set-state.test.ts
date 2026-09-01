@@ -4,13 +4,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
+  captureFileSnapshot,
+  decodeExpectedFile,
+  type ExpectedFile,
+} from "@/lib/config/mutate";
+import {
   readScopeSettings,
   resolveEffectiveSettings,
   settingFilePath,
   type SettingsLocation,
 } from "@/lib/config/settings";
 import { setItemState } from "./set-state";
-import { isArchived } from "./item-state";
+import { archivedItemsPath, isArchived } from "./item-state";
 import { itemState } from "./state";
 
 async function makeLocation(userSettings = "{}"): Promise<SettingsLocation> {
@@ -25,6 +30,21 @@ async function makeLocation(userSettings = "{}"): Promise<SettingsLocation> {
   return location;
 }
 
+/** The current, valid tokens for both files a state change touches. */
+async function tokens(
+  scope: "user" | "project",
+  location: SettingsLocation
+): Promise<{ expectedSettings: ExpectedFile; expectedArchive: ExpectedFile }> {
+  return {
+    expectedSettings: await captureFileSnapshot(
+      settingFilePath(scope, location)
+    ),
+    expectedArchive: await captureFileSnapshot(
+      archivedItemsPath(location.homeDir)
+    ),
+  };
+}
+
 describe("setItemState", () => {
   test("disabling a skill writes Claude Code's own key for skills", async () => {
     const location = await makeLocation();
@@ -34,6 +54,7 @@ describe("setItemState", () => {
       state: "disabled",
       scope: "user",
       location,
+      ...(await tokens("user", location)),
     });
 
     expect(result.error).toBeUndefined();
@@ -52,6 +73,7 @@ describe("setItemState", () => {
       state: "enabled",
       scope: "user",
       location,
+      ...(await tokens("user", location)),
     });
 
     expect(await readScopeSettings("user", location)).toEqual({
@@ -67,6 +89,7 @@ describe("setItemState", () => {
       state: "disabled",
       scope: "user",
       location,
+      ...(await tokens("user", location)),
     });
 
     expect(await readScopeSettings("user", location)).toEqual({
@@ -83,6 +106,7 @@ describe("setItemState", () => {
       scope: "project",
       location,
       source: "local",
+      ...(await tokens("project", location)),
     });
 
     expect(await readScopeSettings("project", location)).toEqual({
@@ -99,6 +123,7 @@ describe("setItemState", () => {
       scope: "project",
       location,
       source: "project",
+      ...(await tokens("project", location)),
     });
 
     expect(await readScopeSettings("project", location)).toEqual({
@@ -115,6 +140,7 @@ describe("setItemState", () => {
       scope: "project",
       location,
       source: "local",
+      ...(await tokens("project", location)),
     });
     await setItemState({
       type: "mcp",
@@ -123,6 +149,7 @@ describe("setItemState", () => {
       scope: "project",
       location,
       source: "project",
+      ...(await tokens("project", location)),
     });
 
     expect(
@@ -154,6 +181,7 @@ describe("setItemState", () => {
       scope: "project",
       location,
       source: "local",
+      ...(await tokens("project", location)),
     });
 
     const resolution = await resolveEffectiveSettings(location);
@@ -179,6 +207,7 @@ describe("setItemState", () => {
       scope: "project",
       location,
       source: "project",
+      ...(await tokens("project", location)),
     });
 
     const resolution = await resolveEffectiveSettings(location);
@@ -215,6 +244,7 @@ describe("setItemState", () => {
       state: "enabled",
       scope: "user",
       location,
+      ...(await tokens("user", location)),
     });
 
     expect(await readFile(path, "utf8")).toBe('{"model":"opus"}');
@@ -228,6 +258,7 @@ describe("setItemState", () => {
       state: "archived",
       scope: "user",
       location,
+      ...(await tokens("user", location)),
     });
 
     expect(await readScopeSettings("user", location)).toEqual({
@@ -249,6 +280,7 @@ describe("setItemState", () => {
       state: "enabled",
       scope: "user",
       location,
+      ...(await tokens("user", location)),
     });
     expect(
       await isArchived(
@@ -269,11 +301,106 @@ describe("setItemState", () => {
       state: "archived",
       scope: "user",
       location,
+      ...(await tokens("user", location)),
     });
 
     const path = join(location.homeDir!, ".claude", "boopervisor.json");
     const parsed = JSON.parse(await readFile(path, "utf8"));
     expect(Object.keys(parsed.archivedItems)).toHaveLength(1);
+  });
+
+  test("a state change succeeds when both tokens match the files", async () => {
+    const location = await makeLocation();
+    const result = await setItemState({
+      type: "skill",
+      name: "caveman",
+      state: "disabled",
+      scope: "user",
+      location,
+      ...(await tokens("user", location)),
+    });
+
+    expect(result.error).toBeUndefined();
+  });
+
+  test("a state change is refused when the settings file changed after the token was taken", async () => {
+    const location = await makeLocation();
+    const settingsPath = settingFilePath("user", location);
+    const captured = await tokens("user", location);
+    await writeFile(settingsPath, '{"changedBySomeoneElse":true}');
+
+    const result = await setItemState({
+      type: "skill",
+      name: "caveman",
+      state: "disabled",
+      scope: "user",
+      location,
+      ...captured,
+    });
+
+    expect(result.error).toContain(settingsPath);
+  });
+
+  test("a state change is refused when ~/.claude/boopervisor.json changed after its token was taken", async () => {
+    const location = await makeLocation();
+    const archivePath = archivedItemsPath(location.homeDir);
+    const captured = await tokens("user", location);
+    await mkdir(join(archivePath, ".."), { recursive: true });
+    await writeFile(
+      archivePath,
+      '{"archivedItems":{"changedBySomeoneElse":{}}}'
+    );
+
+    const result = await setItemState({
+      type: "skill",
+      name: "caveman",
+      state: "disabled",
+      scope: "user",
+      location,
+      ...captured,
+    });
+
+    expect(result.error).toContain(archivePath);
+  });
+
+  test("a stale archive token leaves the settings file untouched, even when it was disabled first", async () => {
+    const location = await makeLocation();
+    const settingsPath = settingFilePath("user", location);
+    const archivePath = archivedItemsPath(location.homeDir);
+    const captured = await tokens("user", location);
+    await mkdir(join(archivePath, ".."), { recursive: true });
+    await writeFile(
+      archivePath,
+      '{"archivedItems":{"changedBySomeoneElse":{}}}'
+    );
+    const settingsBefore = await readFile(settingsPath, "utf8");
+
+    const result = await setItemState({
+      type: "skill",
+      name: "caveman",
+      state: "archived",
+      scope: "user",
+      location,
+      ...captured,
+    });
+
+    expect(result.error).toContain(archivePath);
+    expect(await readFile(settingsPath, "utf8")).toBe(settingsBefore);
+  });
+
+  test("an empty or malformed token is refused", async () => {
+    const location = await makeLocation();
+    const result = await setItemState({
+      type: "skill",
+      name: "caveman",
+      state: "disabled",
+      scope: "user",
+      location,
+      expectedSettings: decodeExpectedFile(undefined),
+      expectedArchive: decodeExpectedFile(undefined),
+    });
+
+    expect(result.error).toBeTruthy();
   });
 });
 

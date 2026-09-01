@@ -5,10 +5,13 @@ import {
 import { ItemStateControls } from "@/components/items/item-state-controls";
 import { itemState, whyDisabled } from "@/lib/items";
 import { readProjectScopeSkills, readUserScopeSkills } from "@/lib/skills/read";
+import { captureFileSnapshot, encodeExpectedFile } from "@/lib/config/mutate";
 import {
   resolveEffectiveSettings,
+  settingFilePath,
   type SettingsLocation,
 } from "@/lib/config/settings";
+import { archivedItemsPath } from "@/lib/items/item-state";
 import { getSelectedScope } from "@/lib/scope/server";
 import { SCOPE_LABELS } from "@/components/settings/scope-labels";
 import { changeItemState } from "@/lib/items/actions";
@@ -36,6 +39,13 @@ export async function SkillList({
       : await readProjectScopeSkills(projectRoot);
 
   const resolution = await resolveEffectiveSettings(location);
+
+  const expectedSettings = encodeExpectedFile(
+    await captureFileSnapshot(settingFilePath(scope, location))
+  );
+  const expectedArchive = encodeExpectedFile(
+    await captureFileSnapshot(archivedItemsPath())
+  );
 
   const skills = await Promise.all(
     Object.entries(configurations).map(async ([name, skill]) => ({
@@ -77,7 +87,12 @@ export async function SkillList({
           <ItemStateControls
             state={skill.state}
             action={changeItemState}
-            fields={{ type: "skill", name: skill.name }}
+            fields={{
+              type: "skill",
+              name: skill.name,
+              expectedSettings,
+              expectedArchive,
+            }}
             lockedReason={
               skill.disabledBy && skill.disabledBy !== scope
                 ? `${SCOPE_LABELS[skill.disabledBy]} settings disable this skill, and win over ${SCOPE_LABELS[scope].toLowerCase()} settings.`

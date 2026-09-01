@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  chmod,
   mkdtemp,
   mkdir,
   readFile,
@@ -286,6 +287,203 @@ describe("mutateJsonFile", () => {
     expect(record.before).toBe('{"model":"opus"}');
     expect(JSON.parse(record.after)).toEqual({ model: "sonnet" });
     expect(await readFile(record.backupPath, "utf8")).toBe(record.before);
+  });
+
+  test("creates the backup file and directory as private, not world-readable", async () => {
+    const { path, homeDir } = await makeHome('{"model":"opus"}');
+    const result = await write(path, homeDir, (content) => ({
+      ...content,
+      model: "sonnet",
+    }));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const fileStats = await stat(result.backupPath);
+    const dirStats = await stat(backupDirectory(homeDir));
+    expect(fileStats.mode & 0o777).toBe(0o600);
+    expect(dirStats.mode & 0o777).toBe(0o700);
+  });
+
+  test("does not leave a temporary file behind after a successful write", async () => {
+    const { path, homeDir } = await makeHome('{"model":"opus"}');
+    const result = await write(path, homeDir, (content) => ({
+      ...content,
+      model: "sonnet",
+    }));
+
+    expect(result.ok).toBe(true);
+    const entries = await readdir(join(homeDir, ".claude"));
+    expect(entries.some((entry) => /\.tmp$/.test(entry))).toBe(false);
+  });
+
+  test("returns io-error rather than throwing when the target directory cannot be created", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "boopervisor-mutate-"));
+    // A file where a directory needs to exist means mkdir(recursive) fails.
+    const blocker = join(homeDir, ".claude");
+    await writeFile(blocker, "not a directory");
+    const path = join(blocker, "settings.json");
+
+    const result = await write(path, homeDir, () => ({ model: "opus" }));
+
+    expect(result).toMatchObject({ ok: false, problem: "io-error" });
+  });
+
+  test("keeps an existing target file's mode across a write", async () => {
+    const { path, homeDir } = await makeHome('{"model":"opus"}');
+    await chmod(path, 0o600);
+
+    const result = await write(path, homeDir, (content) => ({
+      ...content,
+      model: "sonnet",
+    }));
+
+    expect(result.ok).toBe(true);
+    const stats = await stat(path);
+    expect(stats.mode & 0o777).toBe(0o600);
+  });
+
+  test("writes a brand-new target file with the default mode", async () => {
+    const { path, homeDir } = await makeHome();
+    const controlPath = join(homeDir, "control.json");
+    await writeFile(controlPath, "{}");
+    const defaultMode = (await stat(controlPath)).mode & 0o777;
+
+    const result = await write(path, homeDir, () => ({ model: "opus" }));
+
+    expect(result.ok).toBe(true);
+    const stats = await stat(path);
+    // No prior file to inherit a mode from — writeFile's own default, masked by umask.
+    expect(stats.mode & 0o777).toBe(defaultMode);
+  });
+});
+
+describe("preserves a file it does not own", () => {
+  test("a realistic multi-key file keeps every other field, its key order and its indentation when one nested key changes", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "boopervisor-mutate-"));
+    const path = join(homeDir, ".claude.json");
+
+    // Realistic ~/.claude.json with project history, session state, onboarding flags
+    const original =
+      JSON.stringify(
+        {
+          projects: {
+            "/path/to/project1": {
+              history: ["entry1", "entry2"],
+              settings: { theme: "dark" },
+            },
+            "/path/to/project2": {},
+          },
+          sessionState: {
+            currentSession: "session-123",
+            tabHistory: ["tab1", "tab2", "tab3"],
+          },
+          mcpServers: {
+            "server-a": {
+              command: "node",
+              args: ["server.js"],
+            },
+            "server-b": {
+              url: "http://localhost:3000",
+            },
+          },
+          onboardingFlags: {
+            hasSeenWelcome: true,
+            completedSetup: true,
+          },
+          userID: "user-123",
+        },
+        null,
+        2
+      ) + "\n";
+
+    await writeFile(path, original);
+
+    const result = await mutateJsonFile({
+      path,
+      expected: await captureFileSnapshot(path),
+      target: { kind: "item", item: "mcp", scope: "user", name: "mcpServers" },
+      apply: (content) => ({
+        ...content,
+        mcpServers: {
+          ...(content.mcpServers as Record<string, unknown>),
+          "server-c": { command: "python" },
+        },
+      }),
+      homeDir,
+    });
+
+    expect(result.ok).toBe(true);
+
+    const after = await readFile(path, "utf8");
+    const afterObj = JSON.parse(after);
+
+    expect(Object.keys(afterObj)).toEqual([
+      "projects",
+      "sessionState",
+      "mcpServers",
+      "onboardingFlags",
+      "userID",
+    ]);
+    expect(afterObj.projects).toEqual({
+      "/path/to/project1": {
+        history: ["entry1", "entry2"],
+        settings: { theme: "dark" },
+      },
+      "/path/to/project2": {},
+    });
+    expect(afterObj.sessionState).toEqual({
+      currentSession: "session-123",
+      tabHistory: ["tab1", "tab2", "tab3"],
+    });
+    expect(afterObj.onboardingFlags).toEqual({
+      hasSeenWelcome: true,
+      completedSetup: true,
+    });
+    expect(afterObj.userID).toBe("user-123");
+
+    expect(afterObj.mcpServers).toEqual({
+      "server-a": { command: "node", args: ["server.js"] },
+      "server-b": { url: "http://localhost:3000" },
+      "server-c": { command: "python" },
+    });
+
+    expect(after).toContain('  "projects"');
+    expect(after).toContain('    "history"');
+    expect(after.endsWith("\n")).toBe(true);
+
+    // The added server contributes exactly three lines (key, one field, closing
+    // brace); any other delta means the writer reformatted more than it touched.
+    const beforeLines = original.split("\n");
+    const afterLines = after.split("\n");
+    expect(afterLines.length).toBe(beforeLines.length + 3);
+  });
+
+  test("a file with unusual key order and indentation round-trips in its own shape", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "boopervisor-mutate-"));
+    const path = join(homeDir, ".claude.json");
+
+    // Odd indentation (4 spaces), unusual key order
+    const original =
+      '{\n    "userID": "123",\n    "mcpServers": {\n        "srv": {}\n    },\n    "projects": {},\n    "other": "value"\n}\n';
+
+    await writeFile(path, original);
+
+    const result = await mutateJsonFile({
+      path,
+      expected: await captureFileSnapshot(path),
+      target: { kind: "item", item: "mcp", scope: "user", name: "mcpServers" },
+      apply: (content) => content,
+      homeDir,
+    });
+
+    expect(result.ok).toBe(true);
+
+    const after = await readFile(path, "utf8");
+
+    expect(after).toContain('    "userID"');
+    expect(after).toContain('        "srv"');
+    expect(after).toContain('"projects": {}');
+    expect(after).toContain('"other": "value"');
   });
 });
 

@@ -13,10 +13,13 @@ import {
   type McpServer,
   type McpSource,
 } from "@/lib/config/mcp-servers";
+import { captureFileSnapshot, encodeExpectedFile } from "@/lib/config/mutate";
 import {
   resolveEffectiveSettings,
+  settingFilePath,
   type SettingsLocation,
 } from "@/lib/config/settings";
+import { archivedItemsPath } from "@/lib/items/item-state";
 import { getSelectedScope } from "@/lib/scope/server";
 import { SCOPE_LABELS } from "@/components/settings/scope-labels";
 import { changeItemState } from "@/lib/items/actions";
@@ -50,6 +53,13 @@ export async function McpServerList({
   const location: SettingsLocation = { projectRoot };
   const scope = selected.kind === "project" ? "project" : "user";
   const resolution = await resolveEffectiveSettings(location);
+
+  const expectedSettings = encodeExpectedFile(
+    await captureFileSnapshot(settingFilePath(scope, location))
+  );
+  const expectedArchive = encodeExpectedFile(
+    await captureFileSnapshot(archivedItemsPath())
+  );
 
   let rows: {
     id: string;
@@ -144,7 +154,13 @@ export async function McpServerList({
           <ItemStateControls
             state={server.state}
             action={changeItemState}
-            fields={{ type: "mcp", name: server.name, source: server.source }}
+            fields={{
+              type: "mcp",
+              name: server.name,
+              source: server.source,
+              expectedSettings,
+              expectedArchive,
+            }}
             lockedReason={
               // A server denied higher up cannot be re-enabled from the scope being edited.
               // Per Step 1's spike, deniedMcpServers covers a local-scope server the same

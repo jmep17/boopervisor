@@ -5,10 +5,13 @@ import {
 import { ItemStateControls } from "@/components/items/item-state-controls";
 import { itemState, whyDisabled } from "@/lib/items";
 import { readInstalledPlugins } from "@/lib/plugins/read";
+import { captureFileSnapshot, encodeExpectedFile } from "@/lib/config/mutate";
 import {
   resolveEffectiveSettings,
+  settingFilePath,
   type SettingsLocation,
 } from "@/lib/config/settings";
+import { archivedItemsPath } from "@/lib/items/item-state";
 import { getSelectedScope } from "@/lib/scope/server";
 import { SCOPE_LABELS } from "@/components/settings/scope-labels";
 import { changeItemState } from "@/lib/items/actions";
@@ -35,6 +38,13 @@ export async function PluginList({
   const configurations = await readInstalledPlugins();
 
   const resolution = await resolveEffectiveSettings(location);
+
+  const expectedSettings = encodeExpectedFile(
+    await captureFileSnapshot(settingFilePath(scope, location))
+  );
+  const expectedArchive = encodeExpectedFile(
+    await captureFileSnapshot(archivedItemsPath())
+  );
 
   const plugins = await Promise.all(
     Object.entries(configurations).map(async ([id, plugin]) => ({
@@ -77,7 +87,12 @@ export async function PluginList({
           <ItemStateControls
             state={plugin.state}
             action={changeItemState}
-            fields={{ type: "plugin", name: plugin.id }}
+            fields={{
+              type: "plugin",
+              name: plugin.id,
+              expectedSettings,
+              expectedArchive,
+            }}
             lockedReason={
               plugin.disabledBy && plugin.disabledBy !== scope
                 ? `${SCOPE_LABELS[plugin.disabledBy]} settings disable this plugin, and win over ${SCOPE_LABELS[scope].toLowerCase()} settings.`

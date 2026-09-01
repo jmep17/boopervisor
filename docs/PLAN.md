@@ -60,7 +60,9 @@ Out of scope, deliberately:
   filesystem.
 - `/settings` always shows the effective value for a key together with a per-scope breakdown
   of which scope set it. Editing targets the selected scope, and the breakdown makes it
-  visible when a higher-precedence scope will override what was just typed.
+  visible when a higher-precedence scope will override what was just typed. For a project,
+  the page also chooses which of its two files an edit lands in, `.claude/settings.json` or
+  `.claude/settings.local.json`; the choice travels in the URL.
 - Managed settings are shown read-only.
 - Scalars and enumerated keys get typed controls, and any key with enumerated values gets a
   dropdown. String arrays get a list editor. `permissions` and `hooks` get purpose-built

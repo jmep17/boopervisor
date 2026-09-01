@@ -72,7 +72,7 @@ export function MasterDetail({
                   ) : null}
                 </span>
                 {item.detail ? (
-                  <span className="truncate text-xs text-gray-800">
+                  <span className="truncate text-xs text-gray-900">
                     {item.detail}
                   </span>
                 ) : null}
@@ -87,7 +87,7 @@ export function MasterDetail({
         {archivedCount > 0 || showArchived ? (
           <Link
             href={itemHref(selectedId, !showArchived)}
-            className="px-3 text-xs text-gray-900 underline-offset-2 hover:underline"
+            className="px-3 text-sm text-gray-900 underline-offset-2 hover:underline"
           >
             {showArchived
               ? "Hide archived"

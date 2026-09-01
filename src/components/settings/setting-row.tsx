@@ -52,9 +52,9 @@ export function SettingRow({
         <span className="flex min-w-0 flex-col gap-0.5">
           <span className="font-mono text-sm text-gray-1000">{key}</span>
           {definition ? (
-            <span className="text-xs text-gray-900">{definition.summary}</span>
+            <span className="text-sm text-gray-900">{definition.summary}</span>
           ) : (
-            <span className="text-xs text-gray-900">
+            <span className="text-sm text-gray-900">
               Not described by the catalog. Boopervisor leaves it as it found
               it.
             </span>
@@ -62,7 +62,7 @@ export function SettingRow({
         </span>
         <span className="flex min-w-0 items-center gap-2 sm:max-w-[50%] sm:shrink">
           <span
-            className="min-w-0 truncate font-mono text-xs text-gray-900"
+            className="min-w-0 truncate font-mono text-sm text-gray-900"
             title={show(effectiveValue)}
           >
             {show(effectiveValue)}
@@ -79,7 +79,7 @@ export function SettingRow({
       </summary>
 
       <div className="flex flex-col gap-4 border-t border-gray-alpha-400 px-4 py-4">
-        <dl className="flex flex-col gap-1 text-xs">
+        <dl className="flex flex-col gap-1 text-sm">
           {(Object.keys(SCOPE_LABELS) as Scope[])
             .filter((scope) => scope in perScope)
             .map((scope) => (
@@ -104,7 +104,7 @@ export function SettingRow({
         </dl>
 
         {readOnly ? (
-          <p className="text-xs text-gray-900">
+          <p className="text-sm text-gray-900">
             Managed settings belong to whoever administers this machine.
             Boopervisor only reads them.
           </p>

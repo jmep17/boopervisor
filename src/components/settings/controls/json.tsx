@@ -31,7 +31,7 @@ export function JsonControl({ value }: JsonControlProps) {
         }}
       />
       {problem ? (
-        <p role="alert" className="text-xs text-red-900">
+        <p role="alert" className="text-sm text-red-900">
           {problem}
         </p>
       ) : null}

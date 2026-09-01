@@ -62,10 +62,10 @@ export function ItemStateControls({
       </div>
 
       {lockedReason ? (
-        <p className="text-xs text-gray-900">{lockedReason}</p>
+        <p className="text-sm text-gray-900">{lockedReason}</p>
       ) : null}
       {result.error ? (
-        <p role="alert" className="text-xs text-red-900">
+        <p role="alert" className="text-sm text-red-900">
           {result.error}
         </p>
       ) : null}

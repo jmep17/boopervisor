@@ -53,7 +53,7 @@ export function HistoryRow({
         <summary className="flex cursor-pointer items-baseline justify-between gap-4 px-4 py-3">
           <span className="flex flex-col gap-1">
             <span className="text-sm text-gray-1000">{targetLabel}</span>
-            <span className="text-xs text-gray-900">
+            <span className="text-sm text-gray-900">
               <span className="font-mono">{record.path}</span> {timeStr}
             </span>
           </span>
@@ -66,8 +66,8 @@ export function HistoryRow({
           {/* Diff display */}
           {diff.length > 0 ? (
             <div className="flex flex-col gap-2">
-              <p className="text-xs font-medium text-gray-900">Changes:</p>
-              <pre className="max-h-64 overflow-auto rounded-base bg-background-200 p-3 text-xs font-mono text-gray-1000">
+              <p className="text-sm font-medium text-gray-900">Changes:</p>
+              <pre className="max-h-64 overflow-auto rounded-base bg-background-200 p-3 text-sm font-mono text-gray-1000">
                 {diff.map((line, idx) => (
                   <div
                     key={idx}
@@ -103,7 +103,7 @@ export function HistoryRow({
               Restore this backup
             </Button>
           ) : (
-            <p className="text-xs text-gray-900">
+            <p className="text-sm text-gray-900">
               This backup file was pruned and cannot be restored.
             </p>
           )}

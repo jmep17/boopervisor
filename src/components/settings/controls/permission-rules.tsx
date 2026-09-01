@@ -89,7 +89,7 @@ function RuleList({
               </Button>
             </div>
             {errors[`${listType}-${index}`] && (
-              <p className="text-xs text-red-900">
+              <p className="text-sm text-red-900">
                 {errors[`${listType}-${index}`]}
               </p>
             )}

@@ -125,7 +125,7 @@ function HooksForm({ initialHooks }: { initialHooks: HooksByEvent }) {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-gray-800">
+              <p className="text-xs text-gray-900">
                 No hooks configured for this event.
               </p>
             )}
@@ -249,7 +249,7 @@ function CommandHookEditor({
           className="font-mono"
         />
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-800">Timeout (seconds):</label>
+          <label className="text-xs text-gray-900">Timeout (seconds):</label>
           <Input
             type="number"
             value={hook.timeout ?? ""}
@@ -266,7 +266,7 @@ function CommandHookEditor({
             className="w-24"
           />
         </div>
-        <p className="text-xs text-gray-800">
+        <p className="text-xs text-gray-900">
           {scriptPath(command) ? (
             <>
               Runs <span className="font-mono">{scriptPath(command)}</span>.
@@ -304,7 +304,7 @@ function OtherHookEditor({
         <pre className="overflow-x-auto rounded-base border border-gray-alpha-400 bg-background-200 p-3 font-mono text-xs text-gray-1000">
           {JSON.stringify(hook, null, 2)}
         </pre>
-        <p className="mt-1 text-xs text-gray-800">
+        <p className="mt-1 text-xs text-gray-900">
           A {hook.type} hook. Boopervisor edits command hooks as a form; edit
           this one as JSON.
         </p>

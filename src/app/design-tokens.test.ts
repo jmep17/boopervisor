@@ -89,4 +89,23 @@ describe("design tokens", () => {
     }
     expect(offenders).toEqual([]);
   });
+
+  /**
+   * Geist's gray-700/800 are "high-contrast background" steps (globals.css:10); gray-800 on
+   * white is 4.1:1, under WCAG AA's 4.5:1. Text is gray-900 or darker. A variant-prefixed
+   * use (`disabled:`, `placeholder:`, `data-[placeholder]:`) is exempt: placeholder and
+   * disabled text may be lighter.
+   */
+  const LOW_CONTRAST_TEXT = /(?<![:\w-])text-gray-(?:700|800)\b/g;
+
+  test("readable text is never gray-700 or gray-800", () => {
+    const offenders: string[] = [];
+    for (const file of sourceFiles()) {
+      const source = readFileSync(join(ROOT, file), "utf8");
+      for (const match of source.matchAll(LOW_CONTRAST_TEXT)) {
+        offenders.push(`${file}: ${match[0]}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
 });

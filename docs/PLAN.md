@@ -67,6 +67,9 @@ Out of scope, deliberately:
   editors, because they are edited most and a typo in either silently breaks Claude Code.
   `sandbox`, `env` and `pluginConfigs` get a validated JSON editor until they prove they need
   more.
+- A key the catalog marks dangerous — one that runs a command or changes what Claude Code
+  does unasked — asks for confirmation before it is written; every key shows the reference's
+  type, default and per-session override alongside its value.
 
 ## Item state
 

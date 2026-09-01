@@ -73,6 +73,41 @@ Three details that change behaviour:
   `serverName`. Boopervisor writes `serverName` and recognises a server denied by name; a
   server denied by command or URL is not yet recognised as disabled.
 
+## Where a project's MCP servers live
+
+`.mcp.json` at the project root holds the project-scope servers Boopervisor already read
+(documented, [mcp#project-scope](https://code.claude.com/docs/en/mcp)).
+
+Local scope — the default `claude mcp add` writes to — lives at `projects[<path>].mcpServers`
+in `~/.claude.json` (documented,
+[mcp](https://code.claude.com/docs/en/mcp)):
+
+> Local scope is the default. A local-scoped server loads only in the project where you
+> added it and stays private to you. Claude Code stores it in `~/.claude.json` under that
+> project's path, so the same server won't appear in your other projects.
+
+Claude Code's own record of a `.mcp.json` server's approval — `projects[<path>].
+enabledMcpjsonServers` and `disabledMcpjsonServers` — sits in that same project entry.
+Undocumented; observed on one machine only.
+
+**Step 1 spike answers**, checked 2026-09-01:
+
+- Q1 (does `deniedMcpServers` cover a server regardless of where it is defined?): **Yes.**
+  [settings-reference](https://code.claude.com/docs/en/settings-reference) describes it as
+  "Block specific MCP servers by URL, command, or name" with no restriction to a particular
+  file — it applies to any MCP server regardless of source. So a local-scope server is denied
+  the same way a user-scope one is, and this plan gives local servers the same state controls.
+- Q2 (do `enabledMcpjsonServers` / `disabledMcpjsonServers` apply only to `.mcp.json`
+  servers?): **Yes.** The same page describes both as approving or rejecting "specific
+  servers from a project's `.mcp.json`" — they are scoped to that file, not to servers in
+  general.
+- Bonus, from [mcp#project-server-approvals-and-workspace-trust](https://code.claude.com/docs/en/mcp#project-server-approvals-and-workspace-trust):
+  an unapproved `.mcp.json` server in an untrusted workspace shows as
+  `⏸ Pending approval (run claude to approve)` rather than connected — a third state
+  alongside enabled and disabled that the docs name explicitly for that case. Whether the
+  same "pending, not disabled" reading holds for a **trusted** workspace's unlisted server is
+  not stated, which is why the bullet below stays open.
+
 ## The hooks key
 
 Three nesting levels, not two. `hooks` is an object keyed by event; each value is an array of
@@ -126,9 +161,14 @@ plainly that Claude Code **does not** read the legacy Windows path
 
 ## Still unverified
 
-- Whether `enabledMcpjsonServers` being set makes an unlisted `.mcp.json` server _disabled_
-  or merely _unapproved until the approval dialog is accepted_. Boopervisor treats unlisted
+- Whether a **trusted** workspace's `.mcp.json` server left off both `enabledMcpjsonServers`
+  and `disabledMcpjsonServers` is _disabled_ or merely _unapproved until the approval dialog
+  is accepted_. The docs confirm a third "pending approval" state exists for an untrusted
+  workspace; whether the same applies once trusted is not stated. Boopervisor treats unlisted
   as disabled, which reads the right way in the interface but may not be what Claude Code
   does.
+- The exact shape and semantics of `projects[<path>].enabledMcpjsonServers` and
+  `disabledMcpjsonServers` in `~/.claude.json` — observed on one machine, not documented.
+  Boopervisor reads them for display only and never writes them.
 - Whether `installed_plugins.json` ever holds more than one installation for a plugin id, and
   what `version: 2` denotes. Boopervisor takes the first entry.

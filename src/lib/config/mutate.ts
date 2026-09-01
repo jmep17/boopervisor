@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
 
@@ -177,8 +177,14 @@ function backupStem(path: string): string {
   return `${basename(path)}.${digest}`;
 }
 
-async function exists(path: string): Promise<boolean> {
-  return Bun.file(path).exists();
+/** Node-portable existence check, shared by the mutation layer and the History page. */
+export async function exists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Keeps the most recent `BACKUP_LIMIT` backups of one file. Failing to prune never fails a write. */

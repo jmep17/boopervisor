@@ -17,6 +17,7 @@ import {
   captureFileSnapshot,
   decodeExpectedFile,
   encodeExpectedFile,
+  exists,
   mutateJsonFile,
   type MutationResult,
 } from "./mutate";
@@ -69,6 +70,20 @@ describe("captureFileSnapshot", () => {
 
     expect(after.hash).not.toBe(before.hash);
     expect(homeDir).toBeTruthy();
+  });
+});
+
+describe("exists", () => {
+  test("is true for a file on disk", async () => {
+    const { path } = await makeHome('{"model":"opus"}');
+
+    expect(await exists(path)).toBe(true);
+  });
+
+  test("is false for a missing path", async () => {
+    const { path } = await makeHome();
+
+    expect(await exists(path)).toBe(false);
   });
 });
 

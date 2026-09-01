@@ -1,5 +1,13 @@
 import { createHash } from "node:crypto";
-import { access, mkdir, readdir, rm, writeFile } from "node:fs/promises";
+import {
+  access,
+  mkdir,
+  readdir,
+  rename,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
 
@@ -13,6 +21,7 @@ import {
   serializeLike,
   type JsonObject,
 } from "./json-file";
+import { PRIVATE_DIRECTORY, PRIVATE_FILE } from "./private-files";
 import type { ValidationResult } from "./validate";
 
 export { captureFileSnapshot } from "./json-file";
@@ -119,7 +128,7 @@ export async function mutateJsonFile(
   try {
     const backupPath = await writeBackup(path, current.text, homeDir);
     await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, text, "utf8");
+    await writeFileAtomically(path, text);
 
     const record: MutationRecord = {
       timestamp: new Date().toISOString(),
@@ -141,6 +150,33 @@ export async function mutateJsonFile(
 }
 
 /**
+ * The target is either its old contents or its new ones, never half of each: the text goes
+ * to a temporary file beside it and is renamed over it, and rename within a directory is
+ * atomic. The backup taken a moment earlier covers the case where even this fails.
+ *
+ * `rename` carries the temporary file's mode onto the target, so an existing file's mode is
+ * copied onto the temporary file first — the target's permissions are Claude Code's business,
+ * not something a save should silently widen or narrow.
+ */
+async function writeFileAtomically(path: string, text: string): Promise<void> {
+  const tmp = join(dirname(path), `.${basename(path)}.${process.pid}.tmp`);
+  try {
+    const mode = await stat(path)
+      .then((stats) => stats.mode & 0o777)
+      .catch(() => undefined);
+    await writeFile(
+      tmp,
+      text,
+      mode === undefined ? "utf8" : { encoding: "utf8", mode }
+    );
+    await rename(tmp, path);
+  } catch (error) {
+    await rm(tmp, { force: true });
+    throw error;
+  }
+}
+
+/**
  * A copy of the file as it stands, taken before it is touched. An absent file is backed up
  * as empty, so a restore can return it to not existing in substance if not in name.
  *
@@ -154,7 +190,7 @@ async function writeBackup(
   homeDir?: string
 ): Promise<string> {
   const directory = backupDirectory(homeDir);
-  await mkdir(directory, { recursive: true });
+  await mkdir(directory, { recursive: true, mode: PRIVATE_DIRECTORY });
 
   const stem = backupStem(path);
   // A second mutation within the same millisecond would otherwise overwrite the first backup.
@@ -162,7 +198,7 @@ async function writeBackup(
   for (let attempt = 0; await exists(backupPath); attempt += 1) {
     backupPath = join(directory, `${stem}.${Date.now() + attempt + 1}.json`);
   }
-  await writeFile(backupPath, text, "utf8");
+  await writeFile(backupPath, text, { encoding: "utf8", mode: PRIVATE_FILE });
   await pruneBackups(directory, stem);
   return backupPath;
 }

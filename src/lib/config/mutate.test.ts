@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  chmod,
   mkdtemp,
   mkdir,
   readFile,
@@ -286,6 +287,73 @@ describe("mutateJsonFile", () => {
     expect(record.before).toBe('{"model":"opus"}');
     expect(JSON.parse(record.after)).toEqual({ model: "sonnet" });
     expect(await readFile(record.backupPath, "utf8")).toBe(record.before);
+  });
+
+  test("creates the backup file and directory as private, not world-readable", async () => {
+    const { path, homeDir } = await makeHome('{"model":"opus"}');
+    const result = await write(path, homeDir, (content) => ({
+      ...content,
+      model: "sonnet",
+    }));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const fileStats = await stat(result.backupPath);
+    const dirStats = await stat(backupDirectory(homeDir));
+    expect(fileStats.mode & 0o777).toBe(0o600);
+    expect(dirStats.mode & 0o777).toBe(0o700);
+  });
+
+  test("does not leave a temporary file behind after a successful write", async () => {
+    const { path, homeDir } = await makeHome('{"model":"opus"}');
+    const result = await write(path, homeDir, (content) => ({
+      ...content,
+      model: "sonnet",
+    }));
+
+    expect(result.ok).toBe(true);
+    const entries = await readdir(join(homeDir, ".claude"));
+    expect(entries.some((entry) => /\.tmp$/.test(entry))).toBe(false);
+  });
+
+  test("returns io-error rather than throwing when the target directory cannot be created", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "boopervisor-mutate-"));
+    // A file where a directory needs to exist means mkdir(recursive) fails.
+    const blocker = join(homeDir, ".claude");
+    await writeFile(blocker, "not a directory");
+    const path = join(blocker, "settings.json");
+
+    const result = await write(path, homeDir, () => ({ model: "opus" }));
+
+    expect(result).toMatchObject({ ok: false, problem: "io-error" });
+  });
+
+  test("keeps an existing target file's mode across a write", async () => {
+    const { path, homeDir } = await makeHome('{"model":"opus"}');
+    await chmod(path, 0o600);
+
+    const result = await write(path, homeDir, (content) => ({
+      ...content,
+      model: "sonnet",
+    }));
+
+    expect(result.ok).toBe(true);
+    const stats = await stat(path);
+    expect(stats.mode & 0o777).toBe(0o600);
+  });
+
+  test("writes a brand-new target file with the default mode", async () => {
+    const { path, homeDir } = await makeHome();
+    const controlPath = join(homeDir, "control.json");
+    await writeFile(controlPath, "{}");
+    const defaultMode = (await stat(controlPath)).mode & 0o777;
+
+    const result = await write(path, homeDir, () => ({ model: "opus" }));
+
+    expect(result.ok).toBe(true);
+    const stats = await stat(path);
+    // No prior file to inherit a mode from — writeFile's own default, masked by umask.
+    expect(stats.mode & 0o777).toBe(defaultMode);
   });
 });
 

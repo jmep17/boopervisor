@@ -1,8 +1,15 @@
 import { Suspense } from "react";
 import { PageHeader } from "@/components/page-header";
 import { SettingsList } from "@/components/settings/settings-list";
+import { parseProjectFile } from "@/lib/config/editing-scope";
 
-export default function SettingsPage() {
+/** Which of a project's two files an edit lands in travels in the URL, like every other
+ * listing filter in this app. */
+export default async function SettingsPage({
+  searchParams,
+}: PageProps<"/settings">) {
+  const { file } = await searchParams;
+
   return (
     <>
       <PageHeader
@@ -12,7 +19,7 @@ export default function SettingsPage() {
       <Suspense
         fallback={<p className="text-sm text-gray-900">Reading settings…</p>}
       >
-        <SettingsList />
+        <SettingsList file={parseProjectFile(file)} />
       </Suspense>
     </>
   );

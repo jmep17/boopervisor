@@ -6,6 +6,7 @@ import {
   type Scope,
 } from "@/lib/catalog";
 import { resolveOptionSource } from "@/lib/config/option-sources";
+import { editingScopeFor, type ProjectFile } from "@/lib/config/editing-scope";
 import { encodeExpectedFile } from "@/lib/config/mutate";
 import { snapshotScope } from "@/lib/config/mutate-setting";
 import {
@@ -16,6 +17,7 @@ import {
 } from "@/lib/config/settings";
 import { getSelectedScope } from "@/lib/scope/server";
 import { SCOPE_LABELS } from "./scope-labels";
+import { SettingsFileSwitch } from "./settings-file-switch";
 import { SettingRow } from "./setting-row";
 
 const FILE_STATES: Record<string, string> = {
@@ -29,13 +31,14 @@ const FILE_STATES: Record<string, string> = {
  * Every catalogued key with its effective value and per-scope breakdown, grouped by the
  * catalog's topics, followed by whatever the files hold that the catalog does not describe.
  */
-export async function SettingsList() {
+export async function SettingsList({ file }: { file: ProjectFile }) {
   const selected = await getSelectedScope();
   const location: SettingsLocation = {
     projectRoot: selected.kind === "project" ? selected.path : undefined,
   };
-  // A project's own settings are the ones worth editing; the user scope is the fallback.
-  const editing: Scope = selected.kind === "project" ? "project" : "user";
+  // A project has two files; the page's `file` parameter chooses which one is edited. The
+  // user scope has only its own file.
+  const editing: Scope = editingScopeFor(selected, file);
 
   const { fileStatuses, parsed } = await resolveEffectiveSettings(location);
   const scopes = scopesFor(location);
@@ -85,6 +88,8 @@ export async function SettingsList() {
           ))}
         </ul>
       </section>
+
+      {selected.kind === "project" ? <SettingsFileSwitch file={file} /> : null}
 
       {topics.map((topic) => (
         <section key={topic.topic} className="flex flex-col gap-3">

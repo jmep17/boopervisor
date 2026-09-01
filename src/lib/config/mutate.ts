@@ -36,6 +36,10 @@ export interface MutationError {
 /** Backups older than this are pruned, per file. */
 export const BACKUP_LIMIT = 50;
 
+/** Backups and the mutation log hold verbatim copies of files that may carry API keys. */
+export const PRIVATE_FILE = 0o600;
+export const PRIVATE_DIRECTORY = 0o700;
+
 /**
  * The part of a snapshot a write is checked against. A form carries only this, never the
  * file's contents: the browser has no business holding a copy of the user's configuration.
@@ -154,7 +158,7 @@ async function writeBackup(
   homeDir?: string
 ): Promise<string> {
   const directory = backupDirectory(homeDir);
-  await mkdir(directory, { recursive: true });
+  await mkdir(directory, { recursive: true, mode: PRIVATE_DIRECTORY });
 
   const stem = backupStem(path);
   // A second mutation within the same millisecond would otherwise overwrite the first backup.
@@ -162,7 +166,7 @@ async function writeBackup(
   for (let attempt = 0; await exists(backupPath); attempt += 1) {
     backupPath = join(directory, `${stem}.${Date.now() + attempt + 1}.json`);
   }
-  await writeFile(backupPath, text, "utf8");
+  await writeFile(backupPath, text, { encoding: "utf8", mode: PRIVATE_FILE });
   await pruneBackups(directory, stem);
   return backupPath;
 }

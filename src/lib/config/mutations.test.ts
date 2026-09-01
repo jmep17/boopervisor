@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -47,5 +47,13 @@ describe("the mutation log", () => {
     expect(
       (await readMutationLog(homeDir)).map((entry) => entry.after)
     ).toEqual(['{"first":true}']);
+  });
+
+  test("creates the log as private, not world-readable", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "boopervisor-log-"));
+    await appendMutationLog(record("first"), homeDir);
+
+    const stats = await stat(mutationLogPath(homeDir));
+    expect(stats.mode & 0o777).toBe(0o600);
   });
 });

@@ -287,6 +287,21 @@ describe("mutateJsonFile", () => {
     expect(JSON.parse(record.after)).toEqual({ model: "sonnet" });
     expect(await readFile(record.backupPath, "utf8")).toBe(record.before);
   });
+
+  test("creates the backup file and directory as private, not world-readable", async () => {
+    const { path, homeDir } = await makeHome('{"model":"opus"}');
+    const result = await write(path, homeDir, (content) => ({
+      ...content,
+      model: "sonnet",
+    }));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const fileStats = await stat(result.backupPath);
+    const dirStats = await stat(backupDirectory(homeDir));
+    expect(fileStats.mode & 0o777).toBe(0o600);
+    expect(dirStats.mode & 0o777).toBe(0o700);
+  });
 });
 
 describe("the expected-file token", () => {

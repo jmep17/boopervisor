@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
 import type { Scope } from "@/lib/catalog";
+import { PRIVATE_DIRECTORY, PRIVATE_FILE } from "./mutate";
 
 /** What a mutation changed, in the interface's own words, so `/history` can describe it. */
 export type MutationTarget =
@@ -40,8 +41,11 @@ export async function appendMutationLog(
   homeDir?: string
 ): Promise<void> {
   const path = mutationLogPath(homeDir);
-  await mkdir(dirname(path), { recursive: true });
-  await appendFile(path, `${JSON.stringify(record)}\n`, "utf8");
+  await mkdir(dirname(path), { recursive: true, mode: PRIVATE_DIRECTORY });
+  await appendFile(path, `${JSON.stringify(record)}\n`, {
+    encoding: "utf8",
+    mode: PRIVATE_FILE,
+  });
 }
 
 /** Newest first, which is the order `/history` lists them in. A malformed line is skipped, not fatal. */

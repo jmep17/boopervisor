@@ -48,8 +48,8 @@ export function SettingRow({
 
   return (
     <details className="group rounded-base border border-gray-alpha-400 bg-background-100">
-      <summary className="flex cursor-pointer items-baseline justify-between gap-4 px-4 py-3">
-        <span className="flex flex-col gap-0.5">
+      <summary className="flex cursor-pointer flex-col gap-2 px-4 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+        <span className="flex min-w-0 flex-col gap-0.5">
           <span className="font-mono text-sm text-gray-1000">{key}</span>
           {definition ? (
             <span className="text-xs text-gray-900">{definition.summary}</span>
@@ -60,12 +60,21 @@ export function SettingRow({
             </span>
           )}
         </span>
-        <span className="flex shrink-0 items-center gap-2">
-          <span className="font-mono text-xs text-gray-900">
+        <span className="flex min-w-0 items-center gap-2 sm:max-w-[50%] sm:shrink">
+          <span
+            className="min-w-0 truncate font-mono text-xs text-gray-900"
+            title={show(effectiveValue)}
+          >
             {show(effectiveValue)}
           </span>
-          {isSet ? <Badge>{SCOPE_LABELS[winningScope]}</Badge> : null}
-          {definition ? null : <Badge tone="warning">Uncatalogued</Badge>}
+          {isSet ? (
+            <Badge className="shrink-0">{SCOPE_LABELS[winningScope]}</Badge>
+          ) : null}
+          {definition ? null : (
+            <Badge tone="warning" className="shrink-0">
+              Uncatalogued
+            </Badge>
+          )}
         </span>
       </summary>
 
@@ -76,7 +85,7 @@ export function SettingRow({
             .map((scope) => (
               <div
                 key={scope}
-                className="flex items-baseline justify-between gap-4"
+                className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
               >
                 <dt
                   className={
@@ -86,7 +95,7 @@ export function SettingRow({
                   {SCOPE_LABELS[scope]}
                   {scope === winningScope ? " — wins" : null}
                 </dt>
-                <dd className="font-mono text-gray-1000">
+                <dd className="min-w-0 break-all font-mono text-gray-1000">
                   {show(perScope[scope])}
                 </dd>
               </div>

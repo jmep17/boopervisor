@@ -5,6 +5,7 @@ import {
   readdir,
   rename,
   rm,
+  stat,
   writeFile,
 } from "node:fs/promises";
 import { homedir } from "node:os";
@@ -20,6 +21,7 @@ import {
   serializeLike,
   type JsonObject,
 } from "./json-file";
+import { PRIVATE_DIRECTORY, PRIVATE_FILE } from "./private-files";
 import type { ValidationResult } from "./validate";
 
 export { captureFileSnapshot } from "./json-file";
@@ -42,10 +44,6 @@ export interface MutationError {
 
 /** Backups older than this are pruned, per file. */
 export const BACKUP_LIMIT = 50;
-
-/** Backups and the mutation log hold verbatim copies of files that may carry API keys. */
-export const PRIVATE_FILE = 0o600;
-export const PRIVATE_DIRECTORY = 0o700;
 
 /**
  * The part of a snapshot a write is checked against. A form carries only this, never the
@@ -155,11 +153,22 @@ export async function mutateJsonFile(
  * The target is either its old contents or its new ones, never half of each: the text goes
  * to a temporary file beside it and is renamed over it, and rename within a directory is
  * atomic. The backup taken a moment earlier covers the case where even this fails.
+ *
+ * `rename` carries the temporary file's mode onto the target, so an existing file's mode is
+ * copied onto the temporary file first — the target's permissions are Claude Code's business,
+ * not something a save should silently widen or narrow.
  */
 async function writeFileAtomically(path: string, text: string): Promise<void> {
   const tmp = join(dirname(path), `.${basename(path)}.${process.pid}.tmp`);
   try {
-    await writeFile(tmp, text, "utf8");
+    const mode = await stat(path)
+      .then((stats) => stats.mode & 0o777)
+      .catch(() => undefined);
+    await writeFile(
+      tmp,
+      text,
+      mode === undefined ? "utf8" : { encoding: "utf8", mode }
+    );
     await rename(tmp, path);
   } catch (error) {
     await rm(tmp, { force: true });

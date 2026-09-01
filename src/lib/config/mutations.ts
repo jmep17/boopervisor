@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
 import type { Scope } from "@/lib/catalog";
-import { PRIVATE_DIRECTORY, PRIVATE_FILE } from "./mutate";
+import { PRIVATE_FILE } from "./private-files";
 
 /** What a mutation changed, in the interface's own words, so `/history` can describe it. */
 export type MutationTarget =
@@ -66,7 +66,8 @@ export async function appendMutationLog(
   homeDir?: string
 ): Promise<void> {
   const path = mutationLogPath(homeDir);
-  await mkdir(dirname(path), { recursive: true, mode: PRIVATE_DIRECTORY });
+  // dirname(path) is ~/.claude — Claude Code's own directory, not Boopervisor's to mode.
+  await mkdir(dirname(path), { recursive: true });
   await rotateMutationLogIfNeeded(path, homeDir);
   await appendFile(path, `${JSON.stringify(record)}\n`, {
     encoding: "utf8",

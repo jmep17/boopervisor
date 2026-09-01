@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  chmod,
   mkdtemp,
   mkdir,
   readFile,
@@ -325,6 +326,34 @@ describe("mutateJsonFile", () => {
     const result = await write(path, homeDir, () => ({ model: "opus" }));
 
     expect(result).toMatchObject({ ok: false, problem: "io-error" });
+  });
+
+  test("keeps an existing target file's mode across a write", async () => {
+    const { path, homeDir } = await makeHome('{"model":"opus"}');
+    await chmod(path, 0o600);
+
+    const result = await write(path, homeDir, (content) => ({
+      ...content,
+      model: "sonnet",
+    }));
+
+    expect(result.ok).toBe(true);
+    const stats = await stat(path);
+    expect(stats.mode & 0o777).toBe(0o600);
+  });
+
+  test("writes a brand-new target file with the default mode", async () => {
+    const { path, homeDir } = await makeHome();
+    const controlPath = join(homeDir, "control.json");
+    await writeFile(controlPath, "{}");
+    const defaultMode = (await stat(controlPath)).mode & 0o777;
+
+    const result = await write(path, homeDir, () => ({ model: "opus" }));
+
+    expect(result.ok).toBe(true);
+    const stats = await stat(path);
+    // No prior file to inherit a mode from — writeFile's own default, masked by umask.
+    expect(stats.mode & 0o777).toBe(defaultMode);
   });
 });
 

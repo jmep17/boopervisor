@@ -289,6 +289,136 @@ describe("mutateJsonFile", () => {
   });
 });
 
+describe("preserves a file it does not own", () => {
+  test("a realistic multi-key file keeps every other field, its key order and its indentation when one nested key changes", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "boopervisor-mutate-"));
+    const path = join(homeDir, ".claude.json");
+
+    // Realistic ~/.claude.json with project history, session state, onboarding flags
+    const original =
+      JSON.stringify(
+        {
+          projects: {
+            "/path/to/project1": {
+              history: ["entry1", "entry2"],
+              settings: { theme: "dark" },
+            },
+            "/path/to/project2": {},
+          },
+          sessionState: {
+            currentSession: "session-123",
+            tabHistory: ["tab1", "tab2", "tab3"],
+          },
+          mcpServers: {
+            "server-a": {
+              command: "node",
+              args: ["server.js"],
+            },
+            "server-b": {
+              url: "http://localhost:3000",
+            },
+          },
+          onboardingFlags: {
+            hasSeenWelcome: true,
+            completedSetup: true,
+          },
+          userID: "user-123",
+        },
+        null,
+        2
+      ) + "\n";
+
+    await writeFile(path, original);
+
+    const result = await mutateJsonFile({
+      path,
+      expected: await captureFileSnapshot(path),
+      target: { kind: "item", item: "mcp", scope: "user", name: "mcpServers" },
+      apply: (content) => ({
+        ...content,
+        mcpServers: {
+          ...(content.mcpServers as Record<string, unknown>),
+          "server-c": { command: "python" },
+        },
+      }),
+      homeDir,
+    });
+
+    expect(result.ok).toBe(true);
+
+    const after = await readFile(path, "utf8");
+    const afterObj = JSON.parse(after);
+
+    expect(Object.keys(afterObj)).toEqual([
+      "projects",
+      "sessionState",
+      "mcpServers",
+      "onboardingFlags",
+      "userID",
+    ]);
+    expect(afterObj.projects).toEqual({
+      "/path/to/project1": {
+        history: ["entry1", "entry2"],
+        settings: { theme: "dark" },
+      },
+      "/path/to/project2": {},
+    });
+    expect(afterObj.sessionState).toEqual({
+      currentSession: "session-123",
+      tabHistory: ["tab1", "tab2", "tab3"],
+    });
+    expect(afterObj.onboardingFlags).toEqual({
+      hasSeenWelcome: true,
+      completedSetup: true,
+    });
+    expect(afterObj.userID).toBe("user-123");
+
+    expect(afterObj.mcpServers).toEqual({
+      "server-a": { command: "node", args: ["server.js"] },
+      "server-b": { url: "http://localhost:3000" },
+      "server-c": { command: "python" },
+    });
+
+    expect(after).toContain('  "projects"');
+    expect(after).toContain('    "history"');
+    expect(after.endsWith("\n")).toBe(true);
+
+    // The added server contributes exactly three lines (key, one field, closing
+    // brace); any other delta means the writer reformatted more than it touched.
+    const beforeLines = original.split("\n");
+    const afterLines = after.split("\n");
+    expect(afterLines.length).toBe(beforeLines.length + 3);
+  });
+
+  test("a file with unusual key order and indentation round-trips in its own shape", async () => {
+    const homeDir = await mkdtemp(join(tmpdir(), "boopervisor-mutate-"));
+    const path = join(homeDir, ".claude.json");
+
+    // Odd indentation (4 spaces), unusual key order
+    const original =
+      '{\n    "userID": "123",\n    "mcpServers": {\n        "srv": {}\n    },\n    "projects": {},\n    "other": "value"\n}\n';
+
+    await writeFile(path, original);
+
+    const result = await mutateJsonFile({
+      path,
+      expected: await captureFileSnapshot(path),
+      target: { kind: "item", item: "mcp", scope: "user", name: "mcpServers" },
+      apply: (content) => content,
+      homeDir,
+    });
+
+    expect(result.ok).toBe(true);
+
+    const after = await readFile(path, "utf8");
+
+    expect(after).toContain('    "userID"');
+    expect(after).toContain('        "srv"');
+    expect(after).toContain('"projects": {}');
+    expect(after).toContain('"other": "value"');
+  });
+});
+
 describe("the expected-file token", () => {
   test("survives a round trip through a form value", async () => {
     const { path } = await makeHome('{"model":"opus"}');

@@ -11,7 +11,8 @@
     "test": "bun test",
     "catalog:settings": "bun run scripts/extract-settings-reference.ts",
     "catalog:hooks": "bun run scripts/extract-hooks-reference.ts",
-    "catalog": "bun run catalog:settings && bun run catalog:hooks",
+    "catalog:env-vars": "bun run scripts/extract-env-vars-reference.ts",
+    "catalog": "bun run catalog:settings && bun run catalog:hooks && bun run catalog:env-vars",
     "prepare": "husky"
   },
   "dependencies": {

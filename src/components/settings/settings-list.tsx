@@ -1,9 +1,11 @@
 import {
   getSetting,
   settingsByTopic,
+  ENV_VARS,
   type OptionSource,
   type Scope,
 } from "@/lib/catalog";
+import type { PickerOption } from "@/components/ui/picker";
 import { resolveOptionSource } from "@/lib/config/option-sources";
 import { editingScopeFor, type ProjectFile } from "@/lib/config/editing-scope";
 import { encodeExpectedFile } from "@/lib/config/mutate";
@@ -86,7 +88,7 @@ export async function SettingsList({
           effective={effective}
           editing={editing}
           expected={expected}
-          options={options}
+          options={optionsFor(definition, options)}
           readOnly={"managed" in effective.perScope}
         />
       ),
@@ -102,7 +104,7 @@ export async function SettingsList({
           effective={effective}
           editing={editing}
           expected={expected}
-          options={options}
+          options={optionsFor(undefined, options)}
           readOnly={"managed" in effective.perScope}
         />
       ),
@@ -149,7 +151,7 @@ export async function SettingsList({
  */
 async function resolveOptions(
   projectRoot?: string
-): Promise<Partial<Record<OptionSource, string[]>>> {
+): Promise<Partial<Record<OptionSource, PickerOption[]>>> {
   const sources: OptionSource[] = [
     "models",
     "outputStyles",
@@ -159,7 +161,26 @@ async function resolveOptions(
   const resolved = await Promise.all(
     sources.map((source) => resolveOptionSource(source, undefined, projectRoot))
   );
-  return Object.fromEntries(
-    sources.map((source, index) => [source, resolved[index]])
-  );
+  return {
+    ...Object.fromEntries(
+      sources.map((source, index) => [
+        source,
+        resolved[index].map((value) => ({ value })),
+      ])
+    ),
+    envVars: ENV_VARS.map((variable) => ({
+      value: variable.name,
+      description: variable.purpose,
+    })),
+  };
+}
+
+type Options = Partial<Record<OptionSource, PickerOption[]>>;
+
+function optionsFor(
+  definition: import("@/lib/catalog").SettingDefinition | undefined,
+  all: Options
+): Options {
+  if (!definition?.optionSource) return {};
+  return { [definition.optionSource]: all[definition.optionSource] ?? [] };
 }

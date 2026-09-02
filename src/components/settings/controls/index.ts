@@ -8,6 +8,7 @@ import { LiteralToggleControl } from "./literal-toggle";
 import { JsonControl } from "./json";
 import { PermissionRulesControl } from "./permission-rules";
 import { HooksEditorControl } from "./hooks-editor";
+import { EnvMapControl } from "./env-map";
 
 export {
   SwitchControl,
@@ -20,4 +21,5 @@ export {
   JsonControl,
   PermissionRulesControl,
   HooksEditorControl,
+  EnvMapControl,
 };

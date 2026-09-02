@@ -5,20 +5,35 @@ import { ComboboxControl } from "./combobox";
 
 describe("ComboboxControl", () => {
   test("shows the value", () => {
-    render(<ComboboxControl value="custom" suggestions={["foo", "bar"]} />);
+    render(
+      <ComboboxControl
+        value="custom"
+        suggestions={[{ value: "foo" }, { value: "bar" }]}
+      />
+    );
     expect(screen.getByRole("combobox")).toHaveValue("custom");
   });
 
   test("lists its suggestions on ArrowDown", async () => {
     const user = userEvent.setup();
-    render(<ComboboxControl value="custom" suggestions={["foo", "bar"]} />);
+    render(
+      <ComboboxControl
+        value="custom"
+        suggestions={[{ value: "foo" }, { value: "bar" }]}
+      />
+    );
     await user.type(screen.getByRole("combobox"), "{ArrowDown}");
     expect(screen.getAllByRole("option")).toHaveLength(2);
   });
 
   test("accepts free text", async () => {
     const user = userEvent.setup();
-    render(<ComboboxControl value="custom" suggestions={["foo", "bar"]} />);
+    render(
+      <ComboboxControl
+        value="custom"
+        suggestions={[{ value: "foo" }, { value: "bar" }]}
+      />
+    );
     const input = screen.getByRole("combobox");
     await user.clear(input);
     await user.type(input, "anything");
@@ -29,7 +44,10 @@ describe("ComboboxControl", () => {
   test("submits under the value name", () => {
     const { container } = render(
       <form>
-        <ComboboxControl value="test" suggestions={["foo", "bar"]} />
+        <ComboboxControl
+          value="test"
+          suggestions={[{ value: "foo" }, { value: "bar" }]}
+        />
       </form>
     );
     expect(

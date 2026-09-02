@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Picker } from "@/components/ui/picker";
+import { Picker, type PickerOption } from "@/components/ui/picker";
 import {
   ChevronUpIcon,
   ChevronDownIcon,
@@ -13,7 +13,7 @@ import {
 
 export interface StringListControlProps {
   value: unknown;
-  suggestions?: string[];
+  suggestions?: PickerOption[];
 }
 
 /**
@@ -69,9 +69,7 @@ export function StringListControl({
                 mode="free"
                 value={entry}
                 onValueChange={(next) => handleUpdateEntry(index, next)}
-                options={suggestions.map((suggestion) => ({
-                  value: suggestion,
-                }))}
+                options={suggestions}
                 id={`${baseId}-${index}`}
                 aria-label={`Entry ${index + 1}`}
                 className="flex-1"

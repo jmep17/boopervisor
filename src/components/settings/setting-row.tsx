@@ -12,6 +12,7 @@ import { SCOPE_LABELS } from "./scope-labels";
 import { ControlComponent } from "./control-component";
 import { ConfirmWriteDialog } from "./confirm-write-dialog";
 import { SettingDetails } from "./setting-details";
+import type { PickerOption } from "@/components/ui/picker";
 
 export type WriteSettingAction = (
   previous: WriteSettingState,
@@ -27,7 +28,7 @@ export interface SettingRowProps {
   /** Identifies the file the form was composed against, so a stale write is refused. */
   expected: string;
   /** Machine-local option lists, resolved when the page rendered. */
-  options?: Partial<Record<OptionSource, string[]>>;
+  options?: Partial<Record<OptionSource, PickerOption[]>>;
   /** Managed settings, which Boopervisor only ever reads. */
   readOnly: boolean;
   /** The Server Action that writes; given so a test can observe what is submitted. */

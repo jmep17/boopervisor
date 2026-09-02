@@ -68,8 +68,8 @@ Out of scope, deliberately:
   a searchable picker; a closed set refuses other text, an open one offers the set and accepts
   anything. String arrays get a list editor. `permissions` and `hooks` get purpose-built
   editors, because they are edited most and a typo in either silently breaks Claude Code.
-  `sandbox`, `env` and `pluginConfigs` get a validated JSON editor until they prove they need
-  more.
+  `sandbox` and `pluginConfigs` get a validated JSON editor until they prove they need more;
+  `env` is edited as named variables with the reference's description of each.
 - A key the catalog marks dangerous — one that runs a command or changes what Claude Code
   does unasked — asks for confirmation before it is written; every key shows the reference's
   type, default and per-session override alongside its value.

@@ -16,6 +16,7 @@ const controls: Control[] = [
   "json",
   "permissionRules",
   "hooks",
+  "envMap",
 ];
 
 describe("ControlComponent", () => {
@@ -42,7 +43,8 @@ describe("ControlComponent", () => {
       } else if (
         control === "stringList" ||
         control === "permissionRules" ||
-        control === "hooks"
+        control === "hooks" ||
+        control === "envMap"
       ) {
         expect(
           container.querySelector('input[type="hidden"][name="value"]')
@@ -68,7 +70,7 @@ describe("ControlComponent", () => {
       <ControlComponent
         definition={definition}
         value={undefined}
-        options={{ models: ["claude-x"] }}
+        options={{ models: [{ value: "claude-x" }] }}
       />
     );
 

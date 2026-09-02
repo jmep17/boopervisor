@@ -121,7 +121,7 @@ describe("StringListControl", () => {
     render(
       <StringListControl
         value={["fable", "opus"]}
-        suggestions={["fable", "opus"]}
+        suggestions={[{ value: "fable" }, { value: "opus" }]}
       />
     );
 

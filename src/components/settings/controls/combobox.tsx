@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 
-import { Picker } from "@/components/ui/picker";
+import { Picker, type PickerOption } from "@/components/ui/picker";
 
 export interface ComboboxControlProps {
   value: unknown;
-  suggestions: string[];
+  suggestions: PickerOption[];
 }
 
 export function ComboboxControl({ value, suggestions }: ComboboxControlProps) {
@@ -20,7 +20,7 @@ export function ComboboxControl({ value, suggestions }: ComboboxControlProps) {
       mode="free"
       value={selected}
       onValueChange={setSelected}
-      options={suggestions.map((suggestion) => ({ value: suggestion }))}
+      options={suggestions}
     />
   );
 }

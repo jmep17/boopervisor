@@ -166,8 +166,13 @@ export const OVERRIDES: Record<string, SettingOverride> = {
     virtual: true,
   },
   env: {
-    note: "An open map of environment variables; no schema to render.",
-    control: "json",
+    note: "A map of variable name to string value. Edited as rows; names are offered from the environment variables reference, with each variable's documented purpose.",
+    control: "envMap",
+    optionSource: "envVars",
+  },
+  httpHookAllowedEnvVars: {
+    note: "Each entry is a variable name; the reference's list is offered.",
+    optionSource: "envVars",
   },
   pluginConfigs: {
     note: "Per-plugin shape is plugin-defined and undocumented.",

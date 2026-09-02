@@ -13,6 +13,9 @@ import {
   settingsForScope,
   settingsByTopic,
   OVERRIDES,
+  ENV_VARS,
+  getEnvVar,
+  isUnknownEnvVar,
 } from "./index";
 
 describe("catalog", () => {
@@ -108,7 +111,8 @@ describe("catalog", () => {
       (setting) =>
         setting.optionSource &&
         setting.suggestions.length === 0 &&
-        setting.optionSource !== "agents"
+        setting.optionSource !== "agents" &&
+        setting.optionSource !== "envVars"
     );
     expect(missing).toEqual([]);
   });
@@ -156,5 +160,26 @@ describe("catalog", () => {
       expect(getHookEvent(event)?.event).toBe(event);
     }
     expect(isUnknownHookEvent("NotAnEvent")).toBe(true);
+  });
+
+  test("environment variables are extracted, unique, and described", () => {
+    expect(ENV_VARS.length).toBeGreaterThan(300);
+    expect(new Set(ENV_VARS.map((v) => v.name)).size).toBe(ENV_VARS.length);
+    expect(ENV_VARS.filter((v) => !v.purpose)).toEqual([]);
+    expect(ENV_VARS.every((v) => v.docUrl.endsWith("#variables"))).toBe(true);
+  });
+
+  test("the variables the settings reference names are present", () => {
+    for (const name of [
+      "ANTHROPIC_API_KEY",
+      "ANTHROPIC_MODEL",
+      "CLAUDE_CODE_EFFORT_LEVEL",
+      "API_TIMEOUT_MS",
+      "DISABLE_TELEMETRY",
+    ]) {
+      expect(getEnvVar(name)?.name).toBe(name);
+    }
+    expect(getEnvVar("DISABLE_TELEMETRY")?.presenceOnly).toBe(true);
+    expect(isUnknownEnvVar("NOT_A_VARIABLE")).toBe(true);
   });
 });

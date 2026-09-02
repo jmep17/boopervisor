@@ -9,12 +9,13 @@
 >
 > **Drift check (run first)**: `git diff --stat 547101c..HEAD -- src/components/settings/control-component.tsx src/components/settings/controls src/components/ui src/lib/catalog/overrides.ts src/lib/catalog/types.ts src/lib/catalog/catalog.test.ts src/lib/config/option-sources.ts src/lib/config/option-sources.test.ts src/components/settings/settings-list.tsx docs/settings-catalog.md docs/PLAN.md README.md`
 > Plans 018–021 change `control-component.tsx` (a `permissionRules` block and
-> a `literal ?? ""`), `literal-toggle.tsx`, `switch.tsx`, `permission-rules.tsx`
-> and `settings-list.tsx`. Those are expected; read the live files. Any other
+> a `literal ?? ""`), `literal-toggle.tsx`, `switch.tsx`, `permission-rules.tsx`,
+> `select.test.tsx`, `hooks-editor.tsx` and `settings-list.tsx`. Those are
+> expected and were reconciled against `a8e1ba0`; read the live files. Any other
 > in-scope change: compare the "Current state" excerpts; on a mismatch STOP.
 >
 > **Base check**: `git merge-base --is-ancestor 547101c HEAD && echo ok` prints
-> `ok`, and plan 018 is merged in (`grep -n '"list"' src/components/settings/control-component.tsx` matches).
+> `ok`, and plan 018 is merged in (`grep -n 'controlProps.list = list' src/components/settings/control-component.tsx` matches).
 
 ## Status
 
@@ -25,7 +26,8 @@
 - **Depends on**: plans/018-the-settings-form-writes-what-it-shows.md
   (control-component and controls); 019 recommended (row tests to lean on)
 - **Category**: direction (requested feature) + bug
-- **Planned at**: commit `547101c`, 2026-09-01
+- **Planned at**: commit `a8e1ba0`, reconciled 2026-09-02 from the original
+  `547101c` plan after plans 018–021 landed
 
 ## Why this matters
 

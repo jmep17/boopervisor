@@ -38,6 +38,8 @@ describe("SelectControl", () => {
         <SelectControl value="high" enumValues={["low", "medium", "high"]} />
       </form>
     );
-    expect(container.querySelector('input[type="hidden"][name="value"]')).not.toBeNull();
+    expect(
+      container.querySelector('input[type="hidden"][name="value"]')
+    ).not.toBeNull();
   });
 });

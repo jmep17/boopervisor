@@ -21,13 +21,19 @@ const controls: Control[] = [
 describe("ControlComponent", () => {
   for (const control of controls) {
     test(`renders the ${control} control`, () => {
-      const definition = SETTINGS.find((setting) => setting.control === control);
+      const definition = SETTINGS.find(
+        (setting) => setting.control === control
+      );
       expect(definition).toBeDefined();
       const { container } = render(
         <ControlComponent definition={definition} value={undefined} />
       );
 
-      if (control === "switch" || control === "select" || control === "combobox") {
+      if (
+        control === "switch" ||
+        control === "select" ||
+        control === "combobox"
+      ) {
         expect(screen.getByRole("combobox")).toBeInTheDocument();
       } else if (control === "text") {
         expect(screen.getByRole("textbox")).toBeInTheDocument();
@@ -67,8 +73,12 @@ describe("ControlComponent", () => {
     );
 
     await user.type(screen.getByRole("combobox"), "{ArrowDown}");
-    expect(screen.getByRole("option", { name: "claude-x" })).toBeInTheDocument();
-    expect(screen.queryByRole("option", { name: "fable" })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "claude-x" })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: "fable" })
+    ).not.toBeInTheDocument();
   });
 
   test("passes model suggestions to string-list entries", async () => {
@@ -77,9 +87,7 @@ describe("ControlComponent", () => {
       (setting) => setting.key === "fallbackModel"
     );
     expect(definition).toBeDefined();
-    render(
-      <ControlComponent definition={definition} value={["default"]} />
-    );
+    render(<ControlComponent definition={definition} value={["default"]} />);
 
     await user.type(screen.getByRole("combobox"), "{ArrowDown}");
     expect(screen.getByRole("option", { name: "opus" })).toBeInTheDocument();

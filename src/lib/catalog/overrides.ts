@@ -16,7 +16,15 @@ export const OVERRIDES: Record<string, SettingOverride> = {
     note: 'Docs: "any language name ... Claude Code doesn\'t validate it". The three quoted names are examples.',
     control: "combobox",
     enumValues: [],
-    suggestions: ["japanese", "spanish", "french", "german", "portuguese", "korean", "chinese"],
+    suggestions: [
+      "japanese",
+      "spanish",
+      "french",
+      "german",
+      "portuguese",
+      "korean",
+      "chinese",
+    ],
   },
   advisorModel: {
     note: "Aliases resolve to a family's current default, but a full model ID is equally valid, so this cannot be a closed list.",
@@ -55,7 +63,7 @@ export const OVERRIDES: Record<string, SettingOverride> = {
     suggestions: ["Default", "Proactive", "Concise", "Explanatory", "Learning"],
   },
   theme: {
-    note: 'Seven built-in names plus two open forms, `custom:<slug>` and `custom:<plugin>:<slug>`. The names are suggestions, not a closed set: an enumValues list here makes the validator refuse the custom forms.',
+    note: "Seven built-in names plus two open forms, `custom:<slug>` and `custom:<plugin>:<slug>`. The names are suggestions, not a closed set: an enumValues list here makes the validator refuse the custom forms.",
     control: "combobox",
     optionSource: "themes",
     enumValues: [],
@@ -84,13 +92,13 @@ export const OVERRIDES: Record<string, SettingOverride> = {
     literal: "disable",
   },
   disableDeepLinkRegistration: {
-    note: "Same shape as `disableAutoMode`: the string \"disable\", or absent.",
+    note: 'Same shape as `disableAutoMode`: the string "disable", or absent.',
     control: "literalToggle",
     valueType: "string",
     literal: "disable",
   },
   "permissions.disableBypassPermissionsMode": {
-    note: "Same shape: the string \"disable\", or absent.",
+    note: 'Same shape: the string "disable", or absent.',
     control: "literalToggle",
     valueType: "string",
     literal: "disable",
@@ -105,7 +113,7 @@ export const OVERRIDES: Record<string, SettingOverride> = {
   // --- Union types the Type line states in prose --------------------------------------------
 
   strictPluginOnlyCustomization: {
-    note: '`true` locks all four kinds, or an array naming them. A union of Boolean and array, so neither control fits; edited as JSON.',
+    note: "`true` locks all four kinds, or an array naming them. A union of Boolean and array, so neither control fits; edited as JSON.",
     control: "json",
     valueType: "unknown",
     dangerous: true,
@@ -114,9 +122,18 @@ export const OVERRIDES: Record<string, SettingOverride> = {
     note: "Documents a member of the parent array, not a settable key.",
     virtual: true,
   },
-  "strictPluginOnlyCustomization.agents": { note: "Array member, not a settable key.", virtual: true },
-  "strictPluginOnlyCustomization.hooks": { note: "Array member, not a settable key.", virtual: true },
-  "strictPluginOnlyCustomization.mcp": { note: "Array member, not a settable key.", virtual: true },
+  "strictPluginOnlyCustomization.agents": {
+    note: "Array member, not a settable key.",
+    virtual: true,
+  },
+  "strictPluginOnlyCustomization.hooks": {
+    note: "Array member, not a settable key.",
+    virtual: true,
+  },
+  "strictPluginOnlyCustomization.mcp": {
+    note: "Array member, not a settable key.",
+    virtual: true,
+  },
 
   // --- Keys with purpose-built editors -------------------------------------------------------
 
@@ -124,8 +141,14 @@ export const OVERRIDES: Record<string, SettingOverride> = {
     note: "Permission rules have their own syntax and a typo silently changes what Claude Code will do unprompted.",
     control: "permissionRules",
   },
-  "permissions.ask": { note: "See `permissions.allow`.", control: "permissionRules" },
-  "permissions.deny": { note: "See `permissions.allow`.", control: "permissionRules" },
+  "permissions.ask": {
+    note: "See `permissions.allow`.",
+    control: "permissionRules",
+  },
+  "permissions.deny": {
+    note: "See `permissions.allow`.",
+    control: "permissionRules",
+  },
   hooks: {
     note: "Structured, event-keyed, and executes shell commands. Warrants its own editor and a confirmation.",
     control: "hooks",
@@ -134,20 +157,57 @@ export const OVERRIDES: Record<string, SettingOverride> = {
 
   // --- Keys that stay raw JSON until they earn more -------------------------------------------
 
-  permissions: { note: "Container for the permission sub-keys; not edited as a whole.", virtual: true },
-  sandbox: { note: "Container for the sandbox sub-keys; not edited as a whole.", virtual: true },
-  env: { note: "An open map of environment variables; no schema to render.", control: "json" },
-  pluginConfigs: { note: "Per-plugin shape is plugin-defined and undocumented.", control: "json" },
-  statusLine: { note: "Object with a command plus optional numeric fields; runs a shell command.", control: "json", dangerous: true },
-  modelPicker: { note: "Object with documented sub-fields; treated as JSON until the fields are catalogued.", control: "json" },
-  attribution: { note: "Container for the attribution sub-keys.", virtual: true },
+  permissions: {
+    note: "Container for the permission sub-keys; not edited as a whole.",
+    virtual: true,
+  },
+  sandbox: {
+    note: "Container for the sandbox sub-keys; not edited as a whole.",
+    virtual: true,
+  },
+  env: {
+    note: "An open map of environment variables; no schema to render.",
+    control: "json",
+  },
+  pluginConfigs: {
+    note: "Per-plugin shape is plugin-defined and undocumented.",
+    control: "json",
+  },
+  statusLine: {
+    note: "Object with a command plus optional numeric fields; runs a shell command.",
+    control: "json",
+    dangerous: true,
+  },
+  modelPicker: {
+    note: "Object with documented sub-fields; treated as JSON until the fields are catalogued.",
+    control: "json",
+  },
+  attribution: {
+    note: "Container for the attribution sub-keys.",
+    virtual: true,
+  },
   worktree: { note: "Container for the worktree sub-keys.", virtual: true },
-  autoMode: { note: "Container: its own rules plus sub-keys.", control: "json" },
+  autoMode: {
+    note: "Container: its own rules plus sub-keys.",
+    control: "json",
+  },
 
   // --- Dangerous enough to confirm ------------------------------------------------------------
 
-  apiKeyHelper: { note: "Runs a command of the user's choosing to produce credentials.", dangerous: true },
-  awsAuthRefresh: { note: "Runs a command to refresh credentials.", dangerous: true },
-  "permissions.defaultMode": { note: "Directly governs what Claude Code will do without asking.", dangerous: true },
-  disableAllHooks: { note: "Turns off every hook, including ones relied on for safety.", dangerous: true },
+  apiKeyHelper: {
+    note: "Runs a command of the user's choosing to produce credentials.",
+    dangerous: true,
+  },
+  awsAuthRefresh: {
+    note: "Runs a command to refresh credentials.",
+    dangerous: true,
+  },
+  "permissions.defaultMode": {
+    note: "Directly governs what Claude Code will do without asking.",
+    dangerous: true,
+  },
+  disableAllHooks: {
+    note: "Turns off every hook, including ones relied on for safety.",
+    dangerous: true,
+  },
 };

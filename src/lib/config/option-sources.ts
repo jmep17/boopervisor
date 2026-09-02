@@ -65,7 +65,10 @@ async function readNamedMarkdownFiles(directory: string): Promise<string[]> {
   return names.sort();
 }
 
-async function frontmatterName(directory: string, file: string): Promise<string> {
+async function frontmatterName(
+  directory: string,
+  file: string
+): Promise<string> {
   const fromFile = file.slice(0, -".md".length);
   try {
     const text = await readFile(join(directory, file), "utf8");

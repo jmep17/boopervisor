@@ -8,7 +8,6 @@ import {
   useRef,
   useState,
   type ChangeEvent,
-  type FocusEvent,
   type KeyboardEvent,
 } from "react";
 
@@ -59,7 +58,8 @@ export function Picker({
     if (!typed) return options;
     const terms = queryTerms(text);
     return options.filter((option) => {
-      const haystack = `${option.value}\n${option.description ?? ""}`.toLowerCase();
+      const haystack =
+        `${option.value}\n${option.description ?? ""}`.toLowerCase();
       return terms.every((term) => haystack.includes(term));
     });
   }, [options, text, typed]);
@@ -93,7 +93,7 @@ export function Picker({
     if (mode === "free") onValueChange(next);
   }
 
-  function handleBlur(_event: FocusEvent<HTMLInputElement>) {
+  function handleBlur() {
     setOpen(false);
     setTyped(false);
     if (mode === "free") return;
@@ -134,8 +134,7 @@ export function Picker({
         setOpen(true);
       } else if (shownOptions.length > 0) {
         setActive(
-          (current) =>
-            (current - 1 + shownOptions.length) % shownOptions.length
+          (current) => (current - 1 + shownOptions.length) % shownOptions.length
         );
       }
       return;
@@ -158,7 +157,8 @@ export function Picker({
     // Blur closes the list after Tab and applies the mode's commit rules.
   }
 
-  const activeId = open && shownOptions[active] ? `${listId}-${active}` : undefined;
+  const activeId =
+    open && shownOptions[active] ? `${listId}-${active}` : undefined;
 
   return (
     <div className="relative">

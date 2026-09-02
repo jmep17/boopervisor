@@ -32,6 +32,8 @@ describe("ComboboxControl", () => {
         <ComboboxControl value="test" suggestions={["foo", "bar"]} />
       </form>
     );
-    expect(container.querySelector('input[type="hidden"][name="value"]')).not.toBeNull();
+    expect(
+      container.querySelector('input[type="hidden"][name="value"]')
+    ).not.toBeNull();
   });
 });

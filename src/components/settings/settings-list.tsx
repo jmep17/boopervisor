@@ -147,9 +147,9 @@ export async function SettingsList({
  * The machine-local option lists, read once per render rather than once per control. A
  * source that yields nothing leaves its controls on the catalog's suggestions.
  */
-async function resolveOptions(projectRoot?: string): Promise<
-  Partial<Record<OptionSource, string[]>>
-> {
+async function resolveOptions(
+  projectRoot?: string
+): Promise<Partial<Record<OptionSource, string[]>>> {
   const sources: OptionSource[] = [
     "models",
     "outputStyles",
@@ -157,9 +157,7 @@ async function resolveOptions(projectRoot?: string): Promise<
     "agents",
   ];
   const resolved = await Promise.all(
-    sources.map((source) =>
-      resolveOptionSource(source, undefined, projectRoot)
-    )
+    sources.map((source) => resolveOptionSource(source, undefined, projectRoot))
   );
   return Object.fromEntries(
     sources.map((source, index) => [source, resolved[index]])

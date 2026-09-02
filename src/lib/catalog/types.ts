@@ -2,7 +2,12 @@
 export type Scope = "user" | "project" | "local" | "managed" | "globalConfig";
 
 /** Precedence, highest first. `globalConfig` is ~/.claude.json and is not part of the merge. */
-export const PRECEDENCE: readonly Scope[] = ["managed", "local", "project", "user"] as const;
+export const PRECEDENCE: readonly Scope[] = [
+  "managed",
+  "local",
+  "project",
+  "user",
+] as const;
 
 export const SCOPE_FILES: Record<Scope, string> = {
   user: "~/.claude/settings.json",
@@ -13,7 +18,8 @@ export const SCOPE_FILES: Record<Scope, string> = {
 };
 
 /** The value shape a key holds, as derived from the reference's Type line. */
-export type ValueType = "boolean" | "string" | "number" | "array" | "object" | "unknown";
+export type ValueType =
+  "boolean" | "string" | "number" | "array" | "object" | "unknown";
 
 /** Which control the interface renders for a key. */
 export type Control =

@@ -24,13 +24,23 @@ const BUILT_IN_OUTPUT_STYLES = [
  */
 export async function resolveOptionSource(
   source: OptionSource,
-  homeDir: string = homedir()
+  homeDir: string = homedir(),
+  projectRoot?: string
 ): Promise<string[]> {
   if (source === "outputStyles") {
-    const custom = await readOutputStyles(
+    const custom = await readNamedMarkdownFiles(
       join(homeDir, ".claude", "output-styles")
     );
     return [...BUILT_IN_OUTPUT_STYLES, ...custom];
+  }
+  if (source === "agents") {
+    const userAgents = await readNamedMarkdownFiles(
+      join(homeDir, ".claude", "agents")
+    );
+    const projectAgents = projectRoot
+      ? await readNamedMarkdownFiles(join(projectRoot, ".claude", "agents"))
+      : [];
+    return [...new Set([...userAgents, ...projectAgents])].sort();
   }
   // Claude Code keeps no local list of models, and custom themes arrive with plugins rather
   // than as files of their own. Both fall back to what the catalog suggests.
@@ -41,7 +51,7 @@ export async function resolveOptionSource(
  * One Markdown file per style. A style is named by its file unless its frontmatter says
  * otherwise, and the name is what `outputStyle` is set to, so it is what is offered.
  */
-async function readOutputStyles(directory: string): Promise<string[]> {
+async function readNamedMarkdownFiles(directory: string): Promise<string[]> {
   let files: string[];
   try {
     files = (await readdir(directory)).filter((file) => file.endsWith(".md"));
@@ -50,12 +60,12 @@ async function readOutputStyles(directory: string): Promise<string[]> {
   }
 
   const names = await Promise.all(
-    files.map((file) => styleName(directory, file))
+    files.map((file) => frontmatterName(directory, file))
   );
   return names.sort();
 }
 
-async function styleName(directory: string, file: string): Promise<string> {
+async function frontmatterName(directory: string, file: string): Promise<string> {
   const fromFile = file.slice(0, -".md".length);
   try {
     const text = await readFile(join(directory, file), "utf8");

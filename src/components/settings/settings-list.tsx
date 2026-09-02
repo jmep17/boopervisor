@@ -53,7 +53,7 @@ export async function SettingsList({
   const scopes = scopesFor(location);
   const expected = encodeExpectedFile(await snapshotScope(editing, location));
 
-  const options = await resolveOptions();
+  const options = await resolveOptions(location.projectRoot);
 
   const catalogued = new Set<string>();
   const topics = settingsByTopic().map((topic) => ({
@@ -147,12 +147,19 @@ export async function SettingsList({
  * The machine-local option lists, read once per render rather than once per control. A
  * source that yields nothing leaves its controls on the catalog's suggestions.
  */
-async function resolveOptions(): Promise<
+async function resolveOptions(projectRoot?: string): Promise<
   Partial<Record<OptionSource, string[]>>
 > {
-  const sources: OptionSource[] = ["models", "outputStyles", "themes"];
+  const sources: OptionSource[] = [
+    "models",
+    "outputStyles",
+    "themes",
+    "agents",
+  ];
   const resolved = await Promise.all(
-    sources.map((source) => resolveOptionSource(source))
+    sources.map((source) =>
+      resolveOptionSource(source, undefined, projectRoot)
+    )
   );
   return Object.fromEntries(
     sources.map((source, index) => [source, resolved[index]])

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { LiteralToggleControl } from "./literal-toggle";
 
 describe("LiteralToggleControl", () => {
@@ -32,5 +33,25 @@ describe("LiteralToggleControl", () => {
   test("displays the literal string as label", () => {
     render(<LiteralToggleControl value={undefined} literal="disabled" />);
     expect(screen.getByText("disabled")).toBeInTheDocument();
+  });
+
+  test("submits the literal when checked", () => {
+    render(<LiteralToggleControl value="disable" literal="disable" />);
+    const hidden = document.querySelector(
+      'input[type="hidden"][name="value"]'
+    ) as HTMLInputElement;
+    expect(hidden.value).toBe("disable");
+  });
+
+  test("submits nothing when unchecked", async () => {
+    const user = userEvent.setup();
+    render(<LiteralToggleControl value={undefined} literal="disable" />);
+    const hidden = document.querySelector(
+      'input[type="hidden"][name="value"]'
+    ) as HTMLInputElement;
+    expect(hidden.value).toBe("");
+
+    await user.click(screen.getByRole("checkbox"));
+    expect(hidden.value).toBe("disable");
   });
 });

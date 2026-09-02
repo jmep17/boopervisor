@@ -41,6 +41,7 @@ export function parseValueForSetting(
 
   switch (definition?.valueType) {
     case "boolean":
+      if (text === "") return { ok: true, value: undefined };
       return { ok: true, value: text === "true" || text === "on" };
     case "number": {
       const value = Number(text);

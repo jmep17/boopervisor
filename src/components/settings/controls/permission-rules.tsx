@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,232 +9,137 @@ import {
   TrashIcon,
   PlusIcon,
 } from "lucide-react";
-import { parsePermissionsObject } from "@/lib/config/permissions";
+import { validatePermissionRule } from "@/lib/config/permissions";
+
+export type PermissionList = "allow" | "ask" | "deny";
 
 export interface PermissionRulesControlProps {
+  /** The array at `permissions.<list>` on disk, or undefined when unset. */
   value: unknown;
+  list: PermissionList;
 }
 
-interface RuleListProps {
-  rules: string[];
-  listType: "allow" | "ask" | "deny";
-  title: string;
-  errors: Record<string, string>;
-  onAddRule: (list: "allow" | "ask" | "deny") => void;
-  onUpdateRule: (
-    list: "allow" | "ask" | "deny",
-    index: number,
-    newValue: string
-  ) => void;
-  onRemoveRule: (list: "allow" | "ask" | "deny", index: number) => void;
-  onMoveUp: (list: "allow" | "ask" | "deny", index: number) => void;
-  onMoveDown: (list: "allow" | "ask" | "deny", index: number) => void;
-}
+/** Where each list sits in Claude Code's evaluation order. The order matters, so the interface says so. */
+const ORDER_NOTE: Record<PermissionList, string> = {
+  deny: "Deny rules are checked first. The first matching rule decides.",
+  ask: "Ask rules are checked after deny rules and before allow rules.",
+  allow:
+    "Allow rules are checked last. A deny or ask rule that matches wins over these.",
+};
 
-function RuleList({
-  rules,
-  listType,
-  title,
-  errors,
-  onAddRule,
-  onUpdateRule,
-  onRemoveRule,
-  onMoveUp,
-  onMoveDown,
-}: RuleListProps) {
+/** Edits the one list of permission rules its key names, and submits it as a JSON array. */
+export function PermissionRulesControl({
+  value,
+  list,
+}: PermissionRulesControlProps) {
+  const [rules, setRules] = useState<string[]>(
+    Array.isArray(value) ? value.map(String) : []
+  );
+  const baseId = useId();
+
+  const update = (index: number, rule: string) => {
+    const updated = [...rules];
+    updated[index] = rule;
+    setRules(updated);
+  };
+
+  const remove = (index: number) => {
+    setRules(rules.filter((_, i) => i !== index));
+  };
+
+  const moveUp = (index: number) => {
+    if (index === 0) return;
+    const updated = [...rules];
+    [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
+    setRules(updated);
+  };
+
+  const moveDown = (index: number) => {
+    if (index === rules.length - 1) return;
+    const updated = [...rules];
+    [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
+    setRules(updated);
+  };
+
+  // Blank entries are dropped so an added-then-abandoned row does not fail the save.
+  const serialized = JSON.stringify(rules.filter((r) => r.trim() !== ""));
+
   return (
     <div className="flex flex-col gap-2">
-      <h4 className="font-medium text-sm text-gray-1000">{title}</h4>
+      <p className="text-sm text-gray-900">{ORDER_NOTE[list]}</p>
       <div className="flex flex-col gap-2">
-        {rules.map((rule, index) => (
-          <div key={index} className="flex flex-col gap-1">
-            <div className="flex gap-2">
-              <Input
-                type="text"
-                value={rule}
-                onChange={(e) =>
-                  onUpdateRule(listType, index, e.currentTarget.value)
-                }
-                placeholder="Tool or Tool(specifier)"
-                className="flex-1"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onMoveUp(listType, index)}
-                disabled={index === 0}
-                title="Move up"
-              >
-                <ChevronUpIcon className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onMoveDown(listType, index)}
-                disabled={index === rules.length - 1}
-                title="Move down"
-              >
-                <ChevronDownIcon className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onRemoveRule(listType, index)}
-                title="Remove rule"
-              >
-                <TrashIcon className="size-4 text-red-900" />
-              </Button>
+        {rules.map((rule, index) => {
+          const inputId = `${baseId}-${index}`;
+          const problemId = `${inputId}-problem`;
+          const validation =
+            rule.trim() === ""
+              ? { ok: true as const }
+              : validatePermissionRule(rule);
+          const problem = validation.ok ? undefined : validation.problem;
+          return (
+            <div key={index} className="flex flex-col gap-1">
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  id={inputId}
+                  aria-label={`Rule ${index + 1}`}
+                  aria-invalid={problem ? true : undefined}
+                  aria-describedby={problem ? problemId : undefined}
+                  value={rule}
+                  onChange={(e) => update(index, e.currentTarget.value)}
+                  placeholder="Tool or Tool(specifier)"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => moveUp(index)}
+                  disabled={index === 0}
+                  title="Move up"
+                >
+                  <ChevronUpIcon className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => moveDown(index)}
+                  disabled={index === rules.length - 1}
+                  title="Move down"
+                >
+                  <ChevronDownIcon className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => remove(index)}
+                  title="Remove rule"
+                >
+                  <TrashIcon className="size-4 text-red-900" />
+                </Button>
+              </div>
+              {problem ? (
+                <p id={problemId} className="text-sm text-red-900">
+                  {problem}
+                </p>
+              ) : null}
             </div>
-            {errors[`${listType}-${index}`] && (
-              <p className="text-sm text-red-900">
-                {errors[`${listType}-${index}`]}
-              </p>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
       <Button
         type="button"
         variant="secondary"
         size="sm"
-        onClick={() => onAddRule(listType)}
+        onClick={() => setRules([...rules, ""])}
       >
         <PlusIcon className="size-4" />
-        Add {listType}
+        Add rule
       </Button>
-    </div>
-  );
-}
 
-/** A set of permission rules organized by allow, ask, deny. */
-export function PermissionRulesControl({ value }: PermissionRulesControlProps) {
-  // Parse the value into allow, ask, deny arrays
-  const parsed = parsePermissionsObject(value);
-  const initialAllow = parsed.ok ? parsed.allow : [];
-  const initialAsk = parsed.ok ? parsed.ask : [];
-  const initialDeny = parsed.ok ? parsed.deny : [];
-
-  const [allow, setAllow] = useState<string[]>(initialAllow);
-  const [ask, setAsk] = useState<string[]>(initialAsk);
-  const [deny, setDeny] = useState<string[]>(initialDeny);
-
-  const [errors] = useState<Record<string, string>>({});
-
-  const handleAddRule = (list: "allow" | "ask" | "deny") => {
-    if (list === "allow") {
-      setAllow([...allow, ""]);
-    } else if (list === "ask") {
-      setAsk([...ask, ""]);
-    } else {
-      setDeny([...deny, ""]);
-    }
-  };
-
-  const handleUpdateRule = (
-    list: "allow" | "ask" | "deny",
-    index: number,
-    newValue: string
-  ) => {
-    if (list === "allow") {
-      const updated = [...allow];
-      updated[index] = newValue;
-      setAllow(updated);
-    } else if (list === "ask") {
-      const updated = [...ask];
-      updated[index] = newValue;
-      setAsk(updated);
-    } else {
-      const updated = [...deny];
-      updated[index] = newValue;
-      setDeny(updated);
-    }
-  };
-
-  const handleRemoveRule = (list: "allow" | "ask" | "deny", index: number) => {
-    if (list === "allow") {
-      setAllow(allow.filter((_, i) => i !== index));
-    } else if (list === "ask") {
-      setAsk(ask.filter((_, i) => i !== index));
-    } else {
-      setDeny(deny.filter((_, i) => i !== index));
-    }
-  };
-
-  const handleMoveUp = (list: "allow" | "ask" | "deny", index: number) => {
-    if (index === 0) return;
-    const source = list === "allow" ? allow : list === "ask" ? ask : deny;
-    const updated = [...source];
-    [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
-
-    if (list === "allow") setAllow(updated);
-    else if (list === "ask") setAsk(updated);
-    else setDeny(updated);
-  };
-
-  const handleMoveDown = (list: "allow" | "ask" | "deny", index: number) => {
-    const source = list === "allow" ? allow : list === "ask" ? ask : deny;
-    if (index === source.length - 1) return;
-    const updated = [...source];
-    [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
-
-    if (list === "allow") setAllow(updated);
-    else if (list === "ask") setAsk(updated);
-    else setDeny(updated);
-  };
-
-  // Assemble the value for submission
-  const submittedValue: Record<string, unknown> = {};
-  if (allow.length > 0) submittedValue.allow = allow;
-  if (ask.length > 0) submittedValue.ask = ask;
-  if (deny.length > 0) submittedValue.deny = deny;
-  const serialized = JSON.stringify(submittedValue);
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3">
-        <RuleList
-          rules={deny}
-          listType="deny"
-          title="Deny (checked first)"
-          errors={errors}
-          onAddRule={handleAddRule}
-          onUpdateRule={handleUpdateRule}
-          onRemoveRule={handleRemoveRule}
-          onMoveUp={handleMoveUp}
-          onMoveDown={handleMoveDown}
-        />
-        <RuleList
-          rules={ask}
-          listType="ask"
-          title="Ask (checked second)"
-          errors={errors}
-          onAddRule={handleAddRule}
-          onUpdateRule={handleUpdateRule}
-          onRemoveRule={handleRemoveRule}
-          onMoveUp={handleMoveUp}
-          onMoveDown={handleMoveDown}
-        />
-        <RuleList
-          rules={allow}
-          listType="allow"
-          title="Allow (checked last)"
-          errors={errors}
-          onAddRule={handleAddRule}
-          onUpdateRule={handleUpdateRule}
-          onRemoveRule={handleRemoveRule}
-          onMoveUp={handleMoveUp}
-          onMoveDown={handleMoveDown}
-        />
-      </div>
-
-      {/* Hidden field for form submission */}
       <input type="hidden" name="value" value={serialized} />
-
-      {/* Validation button - this will be used via JavaScript to validate before submit */}
-      <input type="hidden" name="validateOnSubmit" value="permission-rules" />
     </div>
   );
 }

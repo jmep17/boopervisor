@@ -134,7 +134,6 @@ function HooksForm({ initialHooks }: { initialHooks: HooksByEvent }) {
       </div>
 
       <input type="hidden" name="value" value={serialized} />
-      <input type="hidden" name="validateOnSubmit" value="hooks" />
     </div>
   );
 }

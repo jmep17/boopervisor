@@ -5,12 +5,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 export interface LiteralToggleControlProps {
   value: unknown;
-  literal?: string;
+  literal: string;
 }
 
 export function LiteralToggleControl({
   value,
-  literal = "on",
+  literal,
 }: LiteralToggleControlProps) {
   const isSet = value === literal;
   const [checked, setChecked] = useState(isSet);
@@ -23,7 +23,7 @@ export function LiteralToggleControl({
         defaultChecked={isSet}
         onCheckedChange={(c) => setChecked(Boolean(c))}
       />
-      <input type="hidden" name="value" value={checked ? "on" : ""} />
+      <input type="hidden" name="value" value={checked ? literal : ""} />
       <label htmlFor={inputId} className="text-sm text-gray-1000">
         {literal}
       </label>

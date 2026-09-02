@@ -5,9 +5,10 @@ it is owned by hand, but it is _populated_ by two extraction scripts run deliber
 build time and never at runtime:
 
 ```bash
-bun run catalog          # both of the below
+bun run catalog          # all of the below
 bun run catalog:settings # -> src/lib/catalog/settings.data.json
 bun run catalog:hooks    # -> src/lib/catalog/hooks.data.json
+bun run catalog:env-vars # -> src/lib/catalog/env-vars.data.json
 ```
 
 The generated JSON is committed. Corrections and interface hints live beside it in
@@ -21,6 +22,7 @@ reference no longer documents, so a regeneration cannot silently strand one.
 - Full key reference: https://code.claude.com/docs/en/settings-reference.md
 - Managed settings: https://code.claude.com/docs/en/managed-settings.md
 - Hooks: https://code.claude.com/docs/en/hooks.md
+- Environment variables: https://code.claude.com/docs/en/env-vars.md
 - Skills: https://code.claude.com/docs/en/skills.md
 - Plugins: https://code.claude.com/docs/en/plugins.md
 - MCP: https://code.claude.com/docs/en/mcp.md
@@ -73,6 +75,10 @@ Notification, SubagentStart, SubagentStop, TaskCreated, TaskCompleted, Stop, Sto
 TeammateIdle, ConfigChange, CwdChanged, DirectoryAdded, FileChanged, WorktreeCreate,
 WorktreeRemove, PreCompact, PostCompact, SessionEnd, Elicitation, ElicitationResult.
 
+Environment variables, extracted 2026-09-02: **352 variables** from the one table under
+"Variables", 6 of them read by presence only. The table has no per-row anchors, so every
+entry cites the section.
+
 **Permission rule syntax**: `Tool` or `Tool(specifier)` — e.g. `Bash`, `Bash(npm run *)`,
 `Read(./.env)`, `WebFetch(domain:example.com)`. Evaluation is `deny`, then `ask`, then `allow`,
 and the **first match wins regardless of specificity**. The interface must show rules in that
@@ -94,7 +100,7 @@ edge found in this pass:
   same trap applies to them. A wildcard in a write path is worth a warning in the interface.
 
 **`pluginConfigs`**: still unresolved. The per-plugin shape is plugin-defined and undocumented,
-so it stays a validated JSON editor. Same for `env`, `statusLine`, `modelPicker` and `autoMode`.
+so it stays a validated JSON editor. Same for `statusLine`, `modelPicker` and `autoMode`.
 
 **`strictPluginOnlyCustomization`**: a union — `true` locks all four kinds of customization, or
 an array naming them from `"skills"`, `"agents"`, `"hooks"`, `"mcp"`. The reference documents

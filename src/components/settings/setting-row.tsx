@@ -57,6 +57,7 @@ export function SettingRow({
   const overridden = isOverridden(effective, editing);
   const formRef = useRef<HTMLFormElement>(null);
   const [confirming, setConfirming] = useState(false);
+  const [touched, setTouched] = useState(false);
   const dangerous = definition?.dangerous ?? false;
 
   // A dangerous row submits only through the dialog, whatever triggered it: a
@@ -144,7 +145,9 @@ export function SettingRow({
             ref={formRef}
             action={submit}
             className="flex flex-col gap-3"
+            onChange={() => setTouched(true)}
             onSubmit={(event) => {
+              setTouched(false);
               if (dangerous && !confirmedRef.current) {
                 event.preventDefault();
                 openConfirm("save");
@@ -216,6 +219,12 @@ export function SettingRow({
                 )
               ) : null}
             </div>
+
+            {state.ok && !touched ? (
+              <p role="status" className="text-sm text-gray-900">
+                Saved.
+              </p>
+            ) : null}
           </form>
         )}
 

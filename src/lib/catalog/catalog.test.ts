@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { parseValueForSetting } from "@/lib/config/value-form";
+import { validateSetting } from "@/lib/config/validate";
 import {
   ALL_SETTINGS,
   HOOK_EVENTS,
@@ -65,6 +67,43 @@ describe("catalog", () => {
     expect(getSetting("language")?.control).toBe("combobox");
     expect(getSetting("language")?.enumValues).toEqual([]);
     expect(getSetting("model")?.control).toBe("combobox");
+  });
+
+  test("array keys whose entries are models offer the model list", () => {
+    for (const key of ["fallbackModel", "availableModels"]) {
+      expect(getSetting(key)?.control).toBe("stringList");
+      expect(getSetting(key)?.optionSource).toBe("models");
+    }
+  });
+
+  test("theme accepts its custom forms", () => {
+    const theme = getSetting("theme")!;
+    expect(theme.enumValues).toEqual([]);
+    expect(theme.suggestions).toHaveLength(7);
+    expect(validateSetting("custom:mine", theme).ok).toBe(true);
+  });
+
+  test("agent is a name, not an object", () => {
+    const agent = getSetting("agent");
+    expect(agent?.control).toBe("combobox");
+    expect(agent?.optionSource).toBe("agents");
+    expect(agent?.valueType).toBe("string");
+  });
+
+  test("an option source has a fallback when the machine has nothing", () => {
+    const missing = SETTINGS.filter(
+      (setting) =>
+        setting.optionSource &&
+        setting.suggestions.length === 0 &&
+        setting.optionSource !== "agents"
+    );
+    expect(missing).toEqual([]);
+  });
+
+  test("fallbackModel parses as a list", () => {
+    expect(
+      parseValueForSetting('["opus"]', getSetting("fallbackModel")).ok
+    ).toBe(true);
   });
 
   test("managed-only keys do not appear in user scope", () => {

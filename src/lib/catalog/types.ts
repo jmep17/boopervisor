@@ -29,7 +29,7 @@ export type Control =
   | "json"; // structured and syntax-heavy; edited as validated JSON
 
 /** Option lists that only exist on the user's machine, resolved at render time. */
-export type OptionSource = "models" | "outputStyles" | "themes";
+export type OptionSource = "models" | "outputStyles" | "themes" | "agents";
 
 /** One entry as extracted from the published reference. Regenerated, never hand-edited. */
 export type ExtractedSetting = {

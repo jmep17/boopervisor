@@ -32,6 +32,17 @@ export const OVERRIDES: Record<string, SettingOverride> = {
     suggestions: ["fable", "opus", "sonnet", "haiku"],
   },
   fallbackModel: {
+    note: 'The reference types this as an array of aliases or IDs (`"default"` expands to the default model); each entry offers the model list.',
+    control: "stringList",
+    optionSource: "models",
+    suggestions: ["default", "fable", "opus", "sonnet", "haiku"],
+  },
+  availableModels: {
+    note: "An allowlist of model aliases or IDs; each entry offers the model list.",
+    optionSource: "models",
+    suggestions: ["fable", "opus", "sonnet", "haiku"],
+  },
+  teammateDefaultModel: {
     note: "Same value space as `model`.",
     control: "combobox",
     optionSource: "models",
@@ -41,12 +52,14 @@ export const OVERRIDES: Record<string, SettingOverride> = {
     note: "The name of a built-in or custom output style; custom ones live on disk, so the list is machine-specific.",
     control: "combobox",
     optionSource: "outputStyles",
+    suggestions: ["Default", "Proactive", "Concise", "Explanatory", "Learning"],
   },
   theme: {
-    note: 'Closed set plus two open-ended forms, `custom:<slug>` and `custom:<plugin>:<slug>`, which are patterns rather than values.',
+    note: 'Seven built-in names plus two open forms, `custom:<slug>` and `custom:<plugin>:<slug>`. The names are suggestions, not a closed set: an enumValues list here makes the validator refuse the custom forms.',
     control: "combobox",
     optionSource: "themes",
-    enumValues: [
+    enumValues: [],
+    suggestions: [
       "auto",
       "dark",
       "light",
@@ -55,6 +68,11 @@ export const OVERRIDES: Record<string, SettingOverride> = {
       "dark-ansi",
       "light-ansi",
     ],
+  },
+  agent: {
+    note: "The reference types this as the name of a built-in or custom agent; names are offered from the agents on disk.",
+    control: "combobox",
+    optionSource: "agents",
   },
 
   // --- Present-as-one-fixed-string keys -----------------------------------------------------
@@ -122,7 +140,6 @@ export const OVERRIDES: Record<string, SettingOverride> = {
   pluginConfigs: { note: "Per-plugin shape is plugin-defined and undocumented.", control: "json" },
   statusLine: { note: "Object with a command plus optional numeric fields; runs a shell command.", control: "json", dangerous: true },
   modelPicker: { note: "Object with documented sub-fields; treated as JSON until the fields are catalogued.", control: "json" },
-  agent: { note: "Object describing a subagent: prompt, tools, and model.", control: "json" },
   attribution: { note: "Container for the attribution sub-keys.", virtual: true },
   worktree: { note: "Container for the worktree sub-keys.", virtual: true },
   autoMode: { note: "Container: its own rules plus sub-keys.", control: "json" },

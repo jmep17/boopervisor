@@ -70,4 +70,18 @@ describe("ControlComponent", () => {
     expect(screen.getByRole("option", { name: "claude-x" })).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: "fable" })).not.toBeInTheDocument();
   });
+
+  test("passes model suggestions to string-list entries", async () => {
+    const user = userEvent.setup();
+    const definition = SETTINGS.find(
+      (setting) => setting.key === "fallbackModel"
+    );
+    expect(definition).toBeDefined();
+    render(
+      <ControlComponent definition={definition} value={["default"]} />
+    );
+
+    await user.type(screen.getByRole("combobox"), "{ArrowDown}");
+    expect(screen.getByRole("option", { name: "opus" })).toBeInTheDocument();
+  });
 });

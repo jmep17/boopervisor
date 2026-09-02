@@ -186,6 +186,7 @@ No licence or copyright line appears in the file.
 **In scope**:
 
 - `DESIGN.md` (create, repo root)
+- `.prettierignore` (one entry, see step 2a)
 - `AGENTS.md` (add a section above the Next block)
 - `docs/design-system.md`, `docs/PLAN.md` (one pointer paragraph each)
 - `src/app/design-tokens.test.ts`
@@ -296,11 +297,38 @@ document is judgement, and the reviewer's job.
 Fill in `<YYYY-MM-DD>` and `<N>` from step 1.
 
 **Verify**: `diff -w <(sed -n '/^# Design report websites like Vercel/,$p' DESIGN.md) <(sed -n '/^# Design report websites like Vercel/,$p' /tmp/vercel-design.md)` → empty output.
-`grep -c '^## ' DESIGN.md` → 9 (your 3 plus the document's 6).
+`grep -c '^## ' DESIGN.md` → 10 (your 3 plus the document's 7).
+
+### Step 2a: Keep prettier off the vendored bytes
+
+The pre-commit hook runs prettier, which reformats the HTML inside the
+document's fenced code blocks: it self-closes void elements (`<link ...>`
+becomes `<link ... />`), rewraps long attribute lists, and splits a nested
+`<span>`. That silently edits text this file promises to reproduce verbatim,
+and it breaks step 2's `diff -w`.
+
+`.prettierignore` already exempts generated and vendored artifacts
+(`bun.lock`, `.next`). Append `DESIGN.md` to it, with the reason:
+
+```
+# Vendored verbatim from https://vercel.com/design.md; reformatting it would
+# rewrite text this repo promises to reproduce unchanged.
+DESIGN.md
+```
+
+Format the authored sections 1 and 2 by hand to the repo's prettier settings
+(80-column prose, `-` bullets) since prettier will no longer do it for you.
+
+**Verify**: `git add DESIGN.md .prettierignore && git commit` succeeds, then
+re-run step 2's `diff -w` → empty output. If it is not empty, STOP.
 
 ### Step 3: Point agents and docs at it
 
-`AGENTS.md`: insert **above** the `<!-- NEXT-AGENTS-MD-START -->` line:
+`AGENTS.md`: insert **above** the `<!-- BEGIN:nextjs-agent-rules -->` line.
+(The plan first named `<!-- NEXT-AGENTS-MD-START -->`; that is the _legacy_
+marker at `generate-agent-files.js:51-52`. The live pair is
+`BEGIN:`/`END:nextjs-agent-rules` at `:45-46`, and it is what this repo's
+`AGENTS.md` actually carries.) The section:
 
 ```markdown
 # Design
@@ -323,7 +351,7 @@ a note on what applies to a product interface.
 `Vercel's design.md is vendored as \`DESIGN.md\` and governs everything the tokens do not.`
 
 **Verify**: `grep -n "DESIGN.md" AGENTS.md docs/design-system.md docs/PLAN.md` → three matches;
-`grep -c "NEXT-AGENTS-MD-START" AGENTS.md` → 1 (the Next block is intact).
+`grep -c "BEGIN:nextjs-agent-rules" AGENTS.md` → 1 (the Next block is intact).
 
 ### Step 4: Add the checkable rules to the token guard
 
@@ -428,7 +456,7 @@ Run all gates. In `plans/README.md`, update this plan's row, and under
 `Closed by DESIGN.md (plan 020): "Light and dark themes are implicit; do not add a visible switcher."`
 
 **Verify**: `bun run typecheck` 0 · `bun run lint` 0 · `bun test` 0 fail ·
-`bunx prettier --check DESIGN.md AGENTS.md docs/design-system.md docs/PLAN.md src/app/design-tokens.test.ts src/app/globals.css` and every `.tsx` you touched → exit 0.
+`bunx prettier --check AGENTS.md docs/design-system.md docs/PLAN.md src/app/design-tokens.test.ts src/app/globals.css` (not `DESIGN.md`, ignored per step 2a) and every `.tsx` you touched → exit 0.
 
 ## Test plan
 
@@ -441,6 +469,7 @@ text.
 
 - [ ] `DESIGN.md` exists; `diff -w` of its verbatim section against the fetched file is empty
 - [ ] `grep -n "DESIGN.md" AGENTS.md docs/design-system.md docs/PLAN.md` → 3 matches
+- [ ] `grep -c '^## ' DESIGN.md` → 10; `grep -n "^DESIGN.md$" .prettierignore` → 1 match
 - [ ] `bun test src/app/design-tokens.test.ts` → 10 pass (4 existing + 6 new), 0 fail
 - [ ] `grep -rn "—" src --include='*.tsx' | grep -v '^\s*//' | grep -v design-tokens-allow | grep -v '^\S*:\s*\*'` → only comment lines (eyeball: no JSX text or string literal)
 - [ ] `grep -rn '[A-Za-z]\.\.\.' src --include='*.tsx'` → no matches

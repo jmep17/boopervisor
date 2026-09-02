@@ -7,12 +7,12 @@
 > in `plans/README.md` — unless a reviewer dispatched you and told you they
 > maintain the index.
 >
-> **Drift check (run first)**: `git diff --stat 547101c..HEAD -- src/app/globals.css src/app/design-tokens.test.ts src/components/page-header.tsx src/components/settings/settings-list.tsx src/components/settings/setting-row.tsx src/components/settings/controls/hooks-editor.tsx src/components/settings/controls/permission-rules.tsx src/components/settings/controls/string-list.tsx src/components/items/master-detail.tsx src/components/history/history-row.tsx src/components/history/history-list.tsx src/app/mcp/mcp-server-list.tsx src/app/skills/skill-list.tsx src/app/plugins/plugin-list.tsx src/components/scope-switcher.tsx docs/design-system.md`
-> Plans 018–023 change several of these on purpose; this plan locates every
-> edit by content, not line number. Read the live files first. If a cited
+> **Drift check (run first)**: `git diff --stat aeb57d1..HEAD -- src/app/globals.css src/app/design-tokens.test.ts src/components/page-header.tsx src/components/settings/settings-list.tsx src/components/settings/filterable-settings.tsx src/components/settings/setting-row.tsx src/components/settings/controls/hooks-editor.tsx src/components/settings/controls/hooks-editor.test.tsx src/components/settings/controls/permission-rules.tsx src/components/settings/controls/string-list.tsx src/components/items/master-detail.tsx src/components/items/master-detail.test.tsx src/components/history/history-row.tsx src/components/history/history-list.tsx src/app/mcp/mcp-server-list.tsx src/app/skills/skill-list.tsx src/app/plugins/plugin-list.tsx src/components/scope-switcher.tsx docs/design-system.md`
+> Plans 018–023 are incorporated in this refreshed base. Read the live files
+> first. If a cited
 > class or string is not found where described, treat it as a STOP condition.
 >
-> **Base check**: `git merge-base --is-ancestor 547101c HEAD && echo ok` prints
+> **Base check**: `git merge-base --is-ancestor aeb57d1 HEAD && echo ok` prints
 > `ok`, and plan 020 has landed (`DESIGN.md` exists and
 > `grep -n 'describe("DESIGN.md rules"' src/app/design-tokens.test.ts` matches).
 
@@ -24,7 +24,7 @@
 - **Depends on**: plans/020-design-md-is-in-the-repo-and-enforced.md; run
   after 018, 022 and 023 to avoid conflicts in the controls they rewrite
 - **Category**: tech-debt (design conformance)
-- **Planned at**: commit `547101c`, 2026-09-01
+- **Planned at**: commit `aeb57d1`, refreshed 2026-09-02 after plans 018–023 landed
 
 ## Why this matters
 
@@ -61,8 +61,8 @@ the document asks.
 ### 1. One heading role (DESIGN.md: "Use the published type roles and weight tokens. Do not create arbitrary font sizes or numeric font weights… `heading-24` for major section turns; `heading-20` and `heading-16` for nested structure" and "Establish hierarchy through typography before surfaces or color")
 
 - `src/components/page-header.tsx:15` — `<h1 className="text-2xl font-semibold tracking-tight text-gray-1000">`
-- `src/components/settings/settings-list.tsx:71,96,115` — `<h2 className="text-sm font-medium text-gray-1000">`
-  (after plan 021 the topic `h2` lives in `filterable-settings.tsx`; same classes)
+- `src/components/settings/filterable-settings.tsx:113,128` and
+  `src/components/settings/settings-list.tsx:117` — `<h2 className="text-sm font-medium text-gray-1000">`
 - `src/app/mcp/mcp-server-list.tsx:148` (`h2`) and `:175,189` (`h3`) — identical classes
 - `src/app/skills/skill-list.tsx:81` (`h2`), `:104` (`h3`); `src/app/plugins/plugin-list.tsx:77` (`h2`), `:104` (`h3`)
 - `src/components/settings/controls/hooks-editor.tsx:100` (`h4`); after plan 018 `permission-rules.tsx` has no heading
@@ -73,9 +73,9 @@ the document asks.
 
 ### 2. Tiny muted prose (DESIGN.md: "never use tiny gray copy to make density fit"; "Tiny muted prose, arbitrary font sizes" is a rejected reflex)
 
-`text-xs` sites outside `Badge`, at `547101c`:
+`text-xs` sites outside `Badge`, at `aeb57d1`:
 
-- `src/components/settings/controls/hooks-editor.tsx:43` (an error: `text-xs text-red-900`), `:128`, `:171`, `:238`, `:252`, `:269`, `:304` (the `<pre>`), `:307`
+- `src/components/settings/controls/hooks-editor.tsx:43` (an error: `text-xs text-red-900`), `:128`, `:170`, `:237`, `:251`, `:268`, `:303` (the `<pre>`), `:306`
 - `src/components/items/master-detail.tsx:75` — the item detail line
 - `src/app/plugins/plugin-list.tsx:81`, `src/app/skills/skill-list.tsx:82` — the manifest path
 - `src/components/scope-switcher.tsx:67` — the project path under each option
@@ -112,7 +112,7 @@ The hooks editor's label lanes are `w-16` (`:172,238`), sized for 12 px.
 The "Uncatalogued" badge duplicates the summary two lines above it
 (`:62-65`, "Not described by the catalog…").
 
-- `src/components/settings/settings-list.tsx:115-118` — `<Badge tone="warning">{uncatalogued.length}</Badge>` beside the heading (in `filterable-settings.tsx` after 021).
+- `src/components/settings/filterable-settings.tsx:128-131` — `<Badge tone="warning">{uncatalogued.length}</Badge>` beside the heading.
 - `src/components/history/history-row.tsx:61` — `{scopeLabel ? <Badge>{scopeLabel}</Badge> : null}`
 - Badges that carry **state** and stay: `src/components/items/master-detail.tsx:70-72`
   (disabled/archived) and `hooks-editor.tsx:101-103` ("Not in the catalog").
@@ -194,6 +194,7 @@ The "Uncatalogued" badge duplicates the summary two lines above it
 **Out of scope**:
 
 - `src/components/ui/badge.tsx` — keeps `text-xs`; it is the exemption.
+- `src/components/ui/button.tsx` — the unused `danger` variant is unrelated cleanup and stays.
 - The `<details>/<summary>` row element and the row card border — decided.
 - Any control's data flow, hidden fields, or the `Picker`.
 - `hooks-editor.tsx`'s value import of `@/lib/catalog/hooks` — a bundle
@@ -263,7 +264,8 @@ error at the top `text-sm text-red-900`. The `<pre>` at `:304` becomes
   `<span className="shrink-0 text-sm text-gray-900">{SCOPE_LABELS[winningScope]}</span>`;
   delete the "Uncatalogued" badge (the summary sentence already says it);
   delete the "Confirms before writing" badge and instead, at the top of the
-  expanded body (before `<SettingDetails>`), render for dangerous keys:
+  expanded body (before `<SettingDetails>`), render for dangerous keys with
+  the narrowing expression `{definition?.dangerous ? (...) : null}`:
   `<p className="text-sm text-gray-900">Asks before writing. {definition.overrideNote}</p>`.
 - The Uncatalogued heading (`settings-list.tsx` or `filterable-settings.tsx`):
   `<h2 …>Uncatalogued <span className="font-normal text-gray-900">({count})</span></h2>`.
@@ -294,6 +296,11 @@ In `hooks-editor.tsx`:
 (the `<pre>` at the old `:304` keeps its `border border-gray-alpha-400`; if it
 matches, it is the only allowed one — check the line). `bun test src/components/settings/controls/hooks-editor.test.tsx` → all pass.
 
+`hooks-editor.test.tsx` currently locates the `SessionStart` event wrapper by
+the border classes this step removes. Change only that selector to locate the
+nearest `div.flex.flex-col` from the `SessionStart` heading; keep every
+behavioral assertion unchanged.
+
 ### Step 5: Buttons that say what they do
 
 In `string-list.tsx`, `permission-rules.tsx` and `hooks-editor.tsx`:
@@ -305,8 +312,7 @@ In `string-list.tsx`, `permission-rules.tsx` and `hooks-editor.tsx`:
   `Remove hook ${index + 1}`). Existing tests match `/remove entry/i`,
   `/move down/i` etc.; these labels still match.
 - Drop `text-red-900` from every `TrashIcon`; the button's label is the cue.
-  Delete the `danger` variant from `button.tsx` **only if** `grep -rn 'variant="danger"' src` finds no use (it is unused today; removing it is
-  optional — leave it if unsure).
+  Do not edit `button.tsx`; its unused `danger` variant is outside this plan.
 - Remove the `PlusIcon` from every "Add …" button; the text stays. Delete
   the unused `PlusIcon` imports.
 - Give every lucide icon `aria-hidden="true"` (`<TrashIcon aria-hidden="true" className="size-4" />`).
@@ -320,9 +326,10 @@ In `string-list.tsx`, `permission-rules.tsx` and `hooks-editor.tsx`:
 - `master-detail.tsx`: add `const STATE_LABEL = { enabled: "Enabled", disabled: "Disabled", archived: "Archived" } as const;`
   beside `STATE_TONE` and render `{STATE_LABEL[item.state]}` in the badge.
 - `history-list.tsx`: the empty state becomes `<p className="text-sm text-gray-900">No changes yet.</p>`.
-- `hooks-editor.tsx`: the three `<label>`s get `htmlFor` ids from `useId()`
-  and the matching `Input`s the same `id` (one `useId()` per editor
-  instance, suffixed `-matcher`, `-command`, `-timeout`).
+- `hooks-editor.tsx`: import `useId`. `GroupEditor` gets one `useId()` value
+  for the Matcher label/input pair. `CommandHookEditor` gets one `useId()`
+  value suffixed `-command` and `-timeout` for its two label/input pairs.
+  Every `<label>` gets `htmlFor` and every matching `Input` the same `id`.
 
 **Verify**: `bun test src/components/items src/components/history src/components/settings/controls/hooks-editor.test.tsx` → all pass
 (update `master-detail.test.tsx` if it asserts on the lowercase state text).

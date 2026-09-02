@@ -13,6 +13,11 @@ import { ControlComponent } from "./control-component";
 import { ConfirmWriteDialog } from "./confirm-write-dialog";
 import { SettingDetails } from "./setting-details";
 
+export type WriteSettingAction = (
+  previous: WriteSettingState,
+  formData: FormData
+) => Promise<WriteSettingState>;
+
 export interface SettingRowProps {
   /** Absent for a key found on disk that the catalog does not describe. */
   definition?: SettingDefinition;
@@ -25,6 +30,8 @@ export interface SettingRowProps {
   options?: Partial<Record<OptionSource, string[]>>;
   /** Managed settings, which Boopervisor only ever reads. */
   readOnly: boolean;
+  /** The Server Action that writes; given so a test can observe what is submitted. */
+  action?: WriteSettingAction;
 }
 
 /** How a value reads in the list: JSON, because that is what is in the file. */
@@ -39,9 +46,10 @@ export function SettingRow({
   expected,
   options,
   readOnly,
+  action = writeSetting,
 }: SettingRowProps) {
   const [state, submit, pending] = useActionState<WriteSettingState, FormData>(
-    writeSetting,
+    action,
     {}
   );
   const { key, effectiveValue, winningScope, perScope } = effective;

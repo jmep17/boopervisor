@@ -1,9 +1,16 @@
 import data from "./settings.data.json";
 import { OVERRIDES } from "./overrides";
-import type { Control, ExtractedSetting, SettingDefinition, Scope, ValueType } from "./types";
+import type {
+  Control,
+  ExtractedSetting,
+  SettingDefinition,
+  Scope,
+  ValueType,
+} from "./types";
 
 export * from "./types";
 export * from "./hooks";
+export * from "./env-vars";
 export { OVERRIDES } from "./overrides";
 
 export const CATALOG_SOURCE = data.source;
@@ -43,7 +50,9 @@ function define(entry: ExtractedSetting): SettingDefinition {
 export const ALL_SETTINGS: SettingDefinition[] = extracted.map(define);
 
 /** The keys the settings interface renders: everything that is actually settable on its own. */
-export const SETTINGS: SettingDefinition[] = ALL_SETTINGS.filter((s) => !s.virtual);
+export const SETTINGS: SettingDefinition[] = ALL_SETTINGS.filter(
+  (s) => !s.virtual
+);
 
 const BY_KEY = new Map(ALL_SETTINGS.map((s) => [s.key, s]));
 
@@ -61,7 +70,10 @@ export function settingsForScope(scope: Scope): SettingDefinition[] {
 }
 
 /** Topics in the order the reference presents them, each with its settable keys. */
-export function settingsByTopic(): { topic: string; settings: SettingDefinition[] }[] {
+export function settingsByTopic(): {
+  topic: string;
+  settings: SettingDefinition[];
+}[] {
   const topics = new Map<string, SettingDefinition[]>();
   for (const setting of SETTINGS) {
     const list = topics.get(setting.topic);

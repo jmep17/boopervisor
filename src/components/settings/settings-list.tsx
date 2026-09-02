@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import {
   getSetting,
   settingsByTopic,
@@ -16,6 +15,11 @@ import {
   type SettingsLocation,
 } from "@/lib/config/settings";
 import { getSelectedScope } from "@/lib/scope/server";
+import {
+  FilterableSettings,
+  type FilterableRow,
+  type FilterableTopic,
+} from "./filterable-settings";
 import { SCOPE_LABELS } from "./scope-labels";
 import { SettingsFileSwitch } from "./settings-file-switch";
 import { SettingRow } from "./setting-row";
@@ -31,7 +35,13 @@ const FILE_STATES: Record<string, string> = {
  * Every catalogued key with its effective value and per-scope breakdown, grouped by the
  * catalog's topics, followed by whatever the files hold that the catalog does not describe.
  */
-export async function SettingsList({ file }: { file: ProjectFile }) {
+export async function SettingsList({
+  file,
+  initialQuery,
+}: {
+  file: ProjectFile;
+  initialQuery: string;
+}) {
   const selected = await getSelectedScope();
   const location: SettingsLocation = {
     projectRoot: selected.kind === "project" ? selected.path : undefined,
@@ -65,6 +75,41 @@ export async function SettingsList({ file }: { file: ProjectFile }) {
     .sort()
     .map((key) => resolveKey(key, scopes, parsed));
 
+  const filterableTopics: FilterableTopic[] = topics.map((topic) => ({
+    topic: topic.topic,
+    rows: topic.settings.map(({ definition, effective }): FilterableRow => ({
+      key: definition.key,
+      summary: definition.summary,
+      node: (
+        <SettingRow
+          key={definition.key}
+          definition={definition}
+          effective={effective}
+          editing={editing}
+          expected={expected}
+          options={options}
+          readOnly={"managed" in effective.perScope}
+        />
+      ),
+    })),
+  }));
+
+  const filterableUncatalogued: FilterableRow[] = uncatalogued.map(
+    (effective): FilterableRow => ({
+      key: effective.key,
+      node: (
+        <SettingRow
+          key={effective.key}
+          effective={effective}
+          editing={editing}
+          expected={expected}
+          options={options}
+          readOnly={"managed" in effective.perScope}
+        />
+      ),
+    })
+  );
+
   return (
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-2">
@@ -91,49 +136,11 @@ export async function SettingsList({ file }: { file: ProjectFile }) {
 
       {selected.kind === "project" ? <SettingsFileSwitch file={file} /> : null}
 
-      {topics.map((topic) => (
-        <section key={topic.topic} className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium text-gray-1000">{topic.topic}</h2>
-          <div className="flex flex-col gap-2">
-            {topic.settings.map(({ definition, effective }) => (
-              <SettingRow
-                key={definition.key}
-                definition={definition}
-                effective={effective}
-                editing={editing}
-                expected={expected}
-                options={options}
-                readOnly={"managed" in effective.perScope}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
-
-      {uncatalogued.length > 0 ? (
-        <section className="flex flex-col gap-3">
-          <h2 className="flex items-center gap-2 text-sm font-medium text-gray-1000">
-            Uncatalogued
-            <Badge tone="warning">{uncatalogued.length}</Badge>
-          </h2>
-          <p className="max-w-prose text-sm text-gray-900">
-            Keys these files hold that the catalog does not describe.
-            Boopervisor preserves them exactly as it found them.
-          </p>
-          <div className="flex flex-col gap-2">
-            {uncatalogued.map((effective) => (
-              <SettingRow
-                key={effective.key}
-                effective={effective}
-                editing={editing}
-                expected={expected}
-                options={options}
-                readOnly={"managed" in effective.perScope}
-              />
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <FilterableSettings
+        topics={filterableTopics}
+        uncatalogued={filterableUncatalogued}
+        initialQuery={initialQuery}
+      />
     </div>
   );
 }

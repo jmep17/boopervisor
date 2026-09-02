@@ -8,7 +8,7 @@ import { parseProjectFile } from "@/lib/config/editing-scope";
 export default async function SettingsPage({
   searchParams,
 }: PageProps<"/settings">) {
-  const { file } = await searchParams;
+  const { file, q } = await searchParams;
 
   return (
     <>
@@ -19,7 +19,10 @@ export default async function SettingsPage({
       <Suspense
         fallback={<p className="text-sm text-gray-900">Reading settings…</p>}
       >
-        <SettingsList file={parseProjectFile(file)} />
+        <SettingsList
+          file={parseProjectFile(file)}
+          initialQuery={typeof q === "string" ? q : ""}
+        />
       </Suspense>
     </>
   );

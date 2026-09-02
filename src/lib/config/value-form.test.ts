@@ -18,6 +18,13 @@ describe("parseValueForSetting", () => {
     });
   });
 
+  test("an empty Boolean submission leaves the key unset rather than writing false", () => {
+    expect(parseValueForSetting("", booleanKey)).toEqual({
+      ok: true,
+      value: undefined,
+    });
+  });
+
   test("an empty string unsets a string key rather than writing an empty one", () => {
     expect(parseValueForSetting("", stringKey)).toEqual({
       ok: true,

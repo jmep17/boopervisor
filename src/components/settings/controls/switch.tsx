@@ -10,6 +10,7 @@ export function SwitchControl({ value }: SwitchControlProps) {
   return (
     <Select
       name="value"
+      placeholder="Not set"
       defaultValue={value === undefined ? "" : String(Boolean(value))}
     >
       <SelectItem value="true">On</SelectItem>

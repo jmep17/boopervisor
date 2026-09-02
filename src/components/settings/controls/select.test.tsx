@@ -12,11 +12,14 @@ describe("SelectControl", () => {
   });
 
   test("has name attribute for form submission", () => {
+    // Radix renders its native field only inside a form, which is where the control lives.
     const { container } = render(
-      <SelectControl value="high" enumValues={["low", "medium", "high"]} />
+      <form>
+        <SelectControl value="high" enumValues={["low", "medium", "high"]} />
+      </form>
     );
     const selectRoot = container.querySelector('[name="value"]');
-    expect(selectRoot).toBeDefined();
+    expect(selectRoot).not.toBeNull();
   });
 
   test("handles single enum value", () => {
@@ -26,6 +29,9 @@ describe("SelectControl", () => {
 
   test("handles empty enum values list", () => {
     render(<SelectControl value="" enumValues={[]} />);
-    expect(screen.getByRole("combobox")).toBeInTheDocument();
+    const trigger = screen.getByRole("combobox");
+    expect(trigger).toBeInTheDocument();
+    expect(trigger).toHaveTextContent("");
+    expect(screen.queryAllByRole("option")).toHaveLength(0);
   });
 });

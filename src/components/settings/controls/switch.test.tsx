@@ -1,29 +1,43 @@
 import { describe, expect, test } from "bun:test";
 import { render, screen } from "@testing-library/react";
+import { Field } from "@/components/ui/field";
 import { SwitchControl } from "./switch";
 
 describe("SwitchControl", () => {
-  test("renders a select control", () => {
-    render(<SwitchControl value={true} />);
-    const select = screen.getByRole("combobox");
-    expect(select).toBeInTheDocument();
+  test("shows On for true", () => {
+    render(
+      <Field label="Verbose">
+        <SwitchControl value={true} />
+      </Field>
+    );
+    expect(screen.getByLabelText("Verbose")).toHaveTextContent("On");
   });
 
-  test("has name attribute for form submission", () => {
-    const { container } = render(<SwitchControl value={true} />);
-    const nameAttr = container.querySelector('[name="value"]');
-    expect(nameAttr).toBeDefined();
+  test("shows Off for false", () => {
+    render(
+      <Field label="Verbose">
+        <SwitchControl value={false} />
+      </Field>
+    );
+    expect(screen.getByLabelText("Verbose")).toHaveTextContent("Off");
   });
 
-  test("renders with false value", () => {
-    render(<SwitchControl value={false} />);
-    const select = screen.getByRole("combobox");
-    expect(select).toBeInTheDocument();
+  test("shows Not set for an unset key", () => {
+    render(
+      <Field label="Verbose">
+        <SwitchControl value={undefined} />
+      </Field>
+    );
+    expect(screen.getByLabelText("Verbose")).toHaveTextContent("Not set");
   });
 
-  test("renders with undefined value", () => {
-    render(<SwitchControl value={undefined} />);
-    const select = screen.getByRole("combobox");
-    expect(select).toBeInTheDocument();
+  test("submits under the name value", () => {
+    // Radix renders its native field only inside a form, which is where the control lives.
+    const { container } = render(
+      <form>
+        <SwitchControl value={true} />
+      </form>
+    );
+    expect(container.querySelector('[name="value"]')).not.toBeNull();
   });
 });

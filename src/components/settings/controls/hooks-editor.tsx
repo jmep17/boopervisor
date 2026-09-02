@@ -247,7 +247,10 @@ function CommandHookEditor({
 
   return (
     <div className="flex items-start gap-2">
-      <label className="w-24 pt-1 font-medium text-gray-900 text-sm">
+      <label
+        htmlFor={`${inputId}-command`}
+        className="w-24 pt-1 font-medium text-gray-900 text-sm"
+      >
         Command:
       </label>
       <div className="flex flex-1 flex-col gap-1">

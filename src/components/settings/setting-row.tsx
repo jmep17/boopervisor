@@ -176,6 +176,7 @@ export function SettingRow({
               error={state.error}
             >
               <ControlComponent
+                key={`${editing}:${show(perScope[editing])}`}
                 definition={definition}
                 value={perScope[editing]}
                 options={options}

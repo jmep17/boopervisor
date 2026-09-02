@@ -87,14 +87,10 @@ Only when the host is stock v0 or a generic Next.js, Tailwind, and shadcn projec
 For standalone HTML that copies the foundation into `assets/`, use:
 
 ```html
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link
-  href="https://fonts.googleapis.com/css2?family=Geist:wght@400..600&family=Geist+Mono:wght@400..600&display=swap"
-  rel="stylesheet"
-  referrerpolicy="no-referrer"
-/>
-<link href="assets/vercel-brand.css" rel="stylesheet" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..600&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet" referrerpolicy="no-referrer">
+<link href="assets/vercel-brand.css" rel="stylesheet">
 ```
 
 In an existing Vercel product project, use its installed Geist, GeistCN, semantic tokens, controls, and theme APIs instead of adding a parallel `vbg-*` layer. Otherwise use the published CSS unchanged for typography, colors, controls, themes, and report primitives. Page-owned CSS may create page-specific topology, density, evidence geometry, and semantic compositions from public tokens when the stock primitives would distort the material. Every page-authored selector names only the page-specific custom namespace; never target a published `.vbg-*` class. A custom class sharing a foundation primitive must not change its layout, typography, surface, border, overflow, or control styling.
@@ -188,9 +184,7 @@ When using the standalone CSS, preserve this direct-child order:
     <a class="vbg-skip-link" href="#main">Skip to content</a>
     <header class="vbg-header">
       <div class="vbg-masthead">
-        <span class="vbg-identity"
-          ><span class="vbg-wordmark" role="img" aria-label="Vercel"></span
-        ></span>
+        <span class="vbg-identity"><span class="vbg-wordmark" role="img" aria-label="Vercel"></span></span>
         <div class="vbg-document-meta">...</div>
       </div>
     </header>
@@ -309,7 +303,7 @@ With the standalone foundation, `.vbg-calculator` directly owns `.vbg-calculator
 <div class="vbg-field">
   <label class="vbg-label" for="rate">Flex commitment rate</label>
   <div class="vbg-unit-field">
-    <input id="rate" type="number" value="8" />
+    <input id="rate" type="number" value="8">
     <span class="vbg-unit-suffix">%</span>
   </div>
   <p class="vbg-helper">From 4% to 12%.</p>

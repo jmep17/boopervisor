@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Picker } from "@/components/ui/picker";
 import {
   ChevronUpIcon,
   ChevronDownIcon,
@@ -12,6 +13,7 @@ import {
 
 export interface StringListControlProps {
   value: unknown;
+  suggestions?: string[];
 }
 
 /**
@@ -19,7 +21,11 @@ export interface StringListControlProps {
  * The whole array goes to the server as JSON in one hidden field, so an entry holding a
  * newline or a comma is still one entry.
  */
-export function StringListControl({ value }: StringListControlProps) {
+export function StringListControl({
+  value,
+  suggestions = [],
+}: StringListControlProps) {
+  const baseId = useId();
   const initialEntries = Array.isArray(value) ? value.map(String) : [];
   const [entries, setEntries] = useState<string[]>(initialEntries);
 
@@ -58,13 +64,31 @@ export function StringListControl({ value }: StringListControlProps) {
       <div className="flex flex-col gap-2">
         {entries.map((entry, index) => (
           <div key={index} className="flex gap-2">
-            <Input
-              type="text"
-              value={entry}
-              onChange={(e) => handleUpdateEntry(index, e.currentTarget.value)}
-              placeholder={`Entry ${index + 1}`}
-              className="flex-1"
-            />
+            {suggestions.length > 0 ? (
+              <Picker
+                mode="free"
+                value={entry}
+                onValueChange={(next) => handleUpdateEntry(index, next)}
+                options={suggestions.map((suggestion) => ({
+                  value: suggestion,
+                }))}
+                id={`${baseId}-${index}`}
+                aria-label={`Entry ${index + 1}`}
+                className="flex-1"
+              />
+            ) : (
+              <Input
+                type="text"
+                value={entry}
+                onChange={(e) =>
+                  handleUpdateEntry(index, e.currentTarget.value)
+                }
+                id={`${baseId}-${index}`}
+                aria-label={`Entry ${index + 1}`}
+                placeholder={`Entry ${index + 1}`}
+                className="flex-1"
+              />
+            )}
             <Button
               type="button"
               variant="ghost"

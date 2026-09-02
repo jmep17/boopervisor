@@ -13,25 +13,27 @@ import {
   TextControl,
 } from "./controls";
 import type { OptionSource, SettingDefinition } from "@/lib/catalog";
+import type { PickerOption } from "@/components/ui/picker";
 
 export interface ControlComponentProps {
   definition?: SettingDefinition;
   value: unknown;
   /** Machine-local option lists, resolved on the server when the page rendered. */
-  options?: Partial<Record<OptionSource, string[]>>;
+  options?: Partial<Record<OptionSource, PickerOption[]>>;
 }
 
 /** The list a control may offer: the machine's own when there is one, else the catalog's. */
 function offered(
   definition: SettingDefinition,
-  options: Partial<Record<OptionSource, string[]>>
-): string[] {
+  options: Partial<Record<OptionSource, PickerOption[]>>
+): PickerOption[] {
   const local = definition.optionSource
     ? (options[definition.optionSource] ?? [])
     : [];
   if (local.length > 0) return local;
-  if (definition.suggestions.length > 0) return definition.suggestions;
-  return definition.enumValues;
+  if (definition.suggestions.length > 0)
+    return definition.suggestions.map((value) => ({ value }));
+  return definition.enumValues.map((value) => ({ value }));
 }
 
 /**

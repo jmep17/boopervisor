@@ -68,7 +68,7 @@ describe("ControlComponent", () => {
       <ControlComponent
         definition={definition}
         value={undefined}
-        options={{ models: ["claude-x"] }}
+        options={{ models: [{ value: "claude-x" }] }}
       />
     );
 

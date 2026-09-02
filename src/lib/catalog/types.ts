@@ -32,10 +32,12 @@ export type Control =
   | "literalToggle" // present as one fixed string, or absent
   | "permissionRules" // permissions.allow / ask / deny
   | "hooks"
-  | "json"; // structured and syntax-heavy; edited as validated JSON
+  | "json" // structured and syntax-heavy; edited as validated JSON
+  | "envMap"; // an object of variable name to string value, edited as rows
 
 /** Option lists that only exist on the user's machine, resolved at render time. */
-export type OptionSource = "models" | "outputStyles" | "themes" | "agents";
+export type OptionSource =
+  "models" | "outputStyles" | "themes" | "agents" | "envVars";
 
 /** One entry as extracted from the published reference. Regenerated, never hand-edited. */
 export type ExtractedSetting = {

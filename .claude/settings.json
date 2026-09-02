@@ -1,0 +1,11 @@
+{
+  "env": {
+    "ADVISOR_PLANS_DIR": "plans",
+    "ISSUES_DIR": ".scratch",
+    "ADR_DIR": "docs/adr",
+    "RESEARCH_DIR": "docs/research",
+    "PLANS_DIR": "artifacts/plans",
+    "DIAGRAMS_DIR": "artifacts/diagrams",
+    "DECISIONS_DIR": "artifacts/decisions"
+  }
+}

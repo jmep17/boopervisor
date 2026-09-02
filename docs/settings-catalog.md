@@ -1,7 +1,7 @@
 # Settings catalog sources
 
 The catalog in `src/lib/catalog/` describes every documented Claude Code setting. Per ADR 0003
-it is owned by hand, but it is *populated* by two extraction scripts run deliberately, not at
+it is owned by hand, but it is _populated_ by two extraction scripts run deliberately, not at
 build time and never at runtime:
 
 ```bash
@@ -33,25 +33,27 @@ index table and its own section, and every one with a scope.
 Scope phrases in the reference map onto files as follows. `Global config` is `~/.claude.json`
 and is not part of the settings merge at all.
 
-| Phrase | Files |
-| :-- | :-- |
-| `Any file` | user, project, local, managed |
-| `User, local, or managed` | user, local, managed |
-| `User or managed` | user, managed |
-| `Managed` | managed |
-| `Global config` | `~/.claude.json` |
+| Phrase                    | Files                         |
+| :------------------------ | :---------------------------- |
+| `Any file`                | user, project, local, managed |
+| `User, local, or managed` | user, local, managed          |
+| `User or managed`         | user, managed                 |
+| `Managed`                 | managed                       |
+| `Global config`           | `~/.claude.json`              |
 
 Precedence, highest to lowest: managed → command-line `--settings` (not persisted, out of
 scope) → `.claude/settings.local.json` → `.claude/settings.json` → `~/.claude/settings.json`.
 
 ## Answers to the questions this pass had to close
 
-**Enumerated values.** 27 keys have a genuinely closed set and get a dropdown. Four more looked
+**Enumerated values.** 27 keys have a genuinely closed set and get a strict picker. Four more looked
 enumerated to the extractor but are not, because the reference gives examples in prose rather
 than a closed set: `language` ("any language name ... Claude Code doesn't validate it"),
-`advisorModel` and `model` (an alias *or* a full model ID), and `outputStyle` (a built-in or a
-custom style, which lives on disk). Those get a combobox. `theme` is a closed set of seven
-plus two open forms, `custom:<slug>` and `custom:<plugin-name>:<slug>`.
+`advisorModel` and `model` (an alias _or_ a full model ID), and `outputStyle` (a built-in or a
+custom style, which lives on disk). Those get a free picker. `theme` is a closed set of seven
+plus two open forms, `custom:<slug>` and `custom:<plugin-name>:<slug>`. `theme`'s seven names
+are suggestions in the catalog, not `enumValues`, because the validator treats `enumValues`
+as closed and the custom forms must pass.
 
 - `effortLevel`: `low`, `medium`, `high`, `xhigh`
 - `permissions.defaultMode`: `default`, `acceptEdits`, `plan`, `auto`, `dontAsk`,
@@ -77,7 +79,7 @@ and the **first match wins regardless of specificity**. The interface must show 
 evaluation order, because a broad `allow` is not overridden by a narrow `deny` written later —
 it is the list order that decides.
 
-**Sandbox path syntax**, which is *not* the same dialect as permission rules and is the sharpest
+**Sandbox path syntax**, which is _not_ the same dialect as permission rules and is the sharpest
 edge found in this pass:
 
 - `/` is an absolute path; `~/` is home-relative; `./` or no prefix is relative to the project
@@ -92,8 +94,7 @@ edge found in this pass:
   same trap applies to them. A wildcard in a write path is worth a warning in the interface.
 
 **`pluginConfigs`**: still unresolved. The per-plugin shape is plugin-defined and undocumented,
-so it stays a validated JSON editor. Same for `env`, `statusLine`, `agent`, `modelPicker` and
-`autoMode`.
+so it stays a validated JSON editor. Same for `env`, `statusLine`, `modelPicker` and `autoMode`.
 
 **`strictPluginOnlyCustomization`**: a union — `true` locks all four kinds of customization, or
 an array naming them from `"skills"`, `"agents"`, `"hooks"`, `"mcp"`. The reference documents

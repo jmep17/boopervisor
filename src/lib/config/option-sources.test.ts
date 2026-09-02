@@ -36,4 +36,27 @@ describe("resolveOptionSource", () => {
     expect(await resolveOptionSource("models", home)).toEqual([]);
     expect(await resolveOptionSource("themes", home)).toEqual([]);
   });
+
+  test("names agents from the user and project directories", async () => {
+    const home = await makeHome();
+    const project = await makeHome();
+    const userDirectory = join(home, ".claude", "agents");
+    const projectDirectory = join(project, ".claude", "agents");
+    await mkdir(userDirectory, { recursive: true });
+    await mkdir(projectDirectory, { recursive: true });
+    await writeFile(
+      join(userDirectory, "reviewer.md"),
+      "---\nname: Code reviewer\ndescription: Reviews code\n---\n"
+    );
+    await writeFile(join(projectDirectory, "deployer.md"), "Deploy safely.\n");
+
+    expect(await resolveOptionSource("agents", home, project)).toEqual([
+      "Code reviewer",
+      "deployer",
+    ]);
+  });
+
+  test("offers no agents when neither directory exists", async () => {
+    expect(await resolveOptionSource("agents", await makeHome())).toEqual([]);
+  });
 });

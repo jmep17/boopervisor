@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { parseValueForSetting } from "@/lib/config/value-form";
+import { validateSetting } from "@/lib/config/validate";
 import {
   ALL_SETTINGS,
   HOOK_EVENTS,
@@ -30,23 +32,31 @@ describe("catalog", () => {
   });
 
   test("keys are unique", () => {
-    expect(new Set(ALL_SETTINGS.map((s) => s.key)).size).toBe(ALL_SETTINGS.length);
+    expect(new Set(ALL_SETTINGS.map((s) => s.key)).size).toBe(
+      ALL_SETTINGS.length
+    );
   });
 
   test("no settable key is left with an unresolved value type", () => {
     // `strictPluginOnlyCustomization` is a documented union of Boolean and array, so it has
     // no single value type. Virtual keys describe another key's value and are not settable.
-    const unresolved = SETTINGS.filter((s) => s.valueType === "unknown").map((s) => s.key);
+    const unresolved = SETTINGS.filter((s) => s.valueType === "unknown").map(
+      (s) => s.key
+    );
     expect(unresolved).toEqual(["strictPluginOnlyCustomization"]);
   });
 
   test("a select always has values to select from", () => {
-    const empty = SETTINGS.filter((s) => s.control === "select" && s.enumValues.length < 2);
+    const empty = SETTINGS.filter(
+      (s) => s.control === "select" && s.enumValues.length < 2
+    );
     expect(empty).toEqual([]);
   });
 
   test("a literal toggle knows what string it writes", () => {
-    const missing = SETTINGS.filter((s) => s.control === "literalToggle" && !s.literal);
+    const missing = SETTINGS.filter(
+      (s) => s.control === "literalToggle" && !s.literal
+    );
     expect(missing).toEqual([]);
   });
 
@@ -56,7 +66,12 @@ describe("catalog", () => {
   });
 
   test("known enumerated keys carry their documented values", () => {
-    expect(getSetting("effortLevel")?.enumValues).toEqual(["low", "medium", "high", "xhigh"]);
+    expect(getSetting("effortLevel")?.enumValues).toEqual([
+      "low",
+      "medium",
+      "high",
+      "xhigh",
+    ]);
     expect(getSetting("permissions.defaultMode")?.enumValues).toContain("plan");
     expect(getSetting("autoUpdatesChannel")?.control).toBe("select");
   });
@@ -67,10 +82,49 @@ describe("catalog", () => {
     expect(getSetting("model")?.control).toBe("combobox");
   });
 
+  test("array keys whose entries are models offer the model list", () => {
+    for (const key of ["fallbackModel", "availableModels"]) {
+      expect(getSetting(key)?.control).toBe("stringList");
+      expect(getSetting(key)?.optionSource).toBe("models");
+    }
+  });
+
+  test("theme accepts its custom forms", () => {
+    const theme = getSetting("theme")!;
+    expect(theme.enumValues).toEqual([]);
+    expect(theme.suggestions).toHaveLength(7);
+    expect(validateSetting("custom:mine", theme).ok).toBe(true);
+  });
+
+  test("agent is a name, not an object", () => {
+    const agent = getSetting("agent");
+    expect(agent?.control).toBe("combobox");
+    expect(agent?.optionSource).toBe("agents");
+    expect(agent?.valueType).toBe("string");
+  });
+
+  test("an option source has a fallback when the machine has nothing", () => {
+    const missing = SETTINGS.filter(
+      (setting) =>
+        setting.optionSource &&
+        setting.suggestions.length === 0 &&
+        setting.optionSource !== "agents"
+    );
+    expect(missing).toEqual([]);
+  });
+
+  test("fallbackModel parses as a list", () => {
+    expect(
+      parseValueForSetting('["opus"]', getSetting("fallbackModel")).ok
+    ).toBe(true);
+  });
+
   test("managed-only keys do not appear in user scope", () => {
     const userKeys = settingsForScope("user").map((s) => s.key);
     expect(userKeys).not.toContain("allowManagedHooksOnly");
-    expect(settingsForScope("managed").map((s) => s.key)).toContain("allowManagedHooksOnly");
+    expect(settingsForScope("managed").map((s) => s.key)).toContain(
+      "allowManagedHooksOnly"
+    );
   });
 
   test("an unrecognised key is reported as uncatalogued", () => {
@@ -85,12 +139,20 @@ describe("catalog", () => {
 
   test("hook events are extracted, unique, and described", () => {
     expect(HOOK_EVENTS.length).toBeGreaterThan(25);
-    expect(new Set(HOOK_EVENTS.map((e) => e.event)).size).toBe(HOOK_EVENTS.length);
+    expect(new Set(HOOK_EVENTS.map((e) => e.event)).size).toBe(
+      HOOK_EVENTS.length
+    );
     expect(HOOK_EVENTS.filter((e) => !e.summary)).toEqual([]);
   });
 
   test("the events hooks are most often written against are present", () => {
-    for (const event of ["PreToolUse", "PostToolUse", "SessionStart", "Stop", "UserPromptSubmit"]) {
+    for (const event of [
+      "PreToolUse",
+      "PostToolUse",
+      "SessionStart",
+      "Stop",
+      "UserPromptSubmit",
+    ]) {
       expect(getHookEvent(event)?.event).toBe(event);
     }
     expect(isUnknownHookEvent("NotAnEvent")).toBe(true);

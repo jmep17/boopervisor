@@ -115,4 +115,25 @@ describe("StringListControl", () => {
     // The value the form carries parses back to exactly the entries shown, whatever they hold.
     expect(JSON.parse(hiddenValue())).toEqual(["one,two", "three four"]);
   });
+
+  test("offers suggestions for each entry", async () => {
+    const user = userEvent.setup();
+    render(
+      <StringListControl
+        value={["fable", "opus"]}
+        suggestions={["fable", "opus"]}
+      />
+    );
+
+    const inputs = screen.getAllByRole("combobox");
+    expect(inputs).toHaveLength(2);
+    await user.type(inputs[0], "{ArrowDown}");
+    expect(screen.getAllByRole("option")).toHaveLength(2);
+  });
+
+  test("every entry input has its own id", () => {
+    render(<StringListControl value={["one", "two", "three"]} />);
+    const ids = screen.getAllByRole("textbox").map((input) => input.id);
+    expect(new Set(ids).size).toBe(3);
+  });
 });

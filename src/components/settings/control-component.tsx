@@ -1,6 +1,17 @@
 "use client";
 
-import { CONTROL_REGISTRY } from "./controls";
+import {
+  ComboboxControl,
+  HooksEditorControl,
+  JsonControl,
+  LiteralToggleControl,
+  NumberControl,
+  PermissionRulesControl,
+  SelectControl,
+  StringListControl,
+  SwitchControl,
+  TextControl,
+} from "./controls";
 import type { OptionSource, SettingDefinition } from "@/lib/catalog";
 
 export interface ControlComponentProps {
@@ -8,6 +19,19 @@ export interface ControlComponentProps {
   value: unknown;
   /** Machine-local option lists, resolved on the server when the page rendered. */
   options?: Partial<Record<OptionSource, string[]>>;
+}
+
+/** The list a control may offer: the machine's own when there is one, else the catalog's. */
+function offered(
+  definition: SettingDefinition,
+  options: Partial<Record<OptionSource, string[]>>
+): string[] {
+  const local = definition.optionSource
+    ? (options[definition.optionSource] ?? [])
+    : [];
+  if (local.length > 0) return local;
+  if (definition.suggestions.length > 0) return definition.suggestions;
+  return definition.enumValues;
 }
 
 /**
@@ -19,45 +43,48 @@ export function ControlComponent({
   value,
   options = {},
 }: ControlComponentProps) {
-  if (!definition) {
-    // Uncatalogued keys fall back to JSON editor
-    const JsonControl = CONTROL_REGISTRY.json;
-    return <JsonControl value={value} />;
-  }
+  if (!definition) return <JsonControl value={value} />;
 
-  const SelectedControl = CONTROL_REGISTRY[definition.control];
-  if (!SelectedControl) {
-    // Fallback to JSON editor if control not found
-    const JsonControl = CONTROL_REGISTRY.json;
-    return <JsonControl value={value} />;
-  }
-
-  // Build props based on control type
-  const controlProps: Record<string, unknown> = { value };
-
-  if (definition.control === "select") {
-    controlProps.enumValues = definition.enumValues;
-  }
-
-  if (definition.control === "combobox") {
-    // A machine-local list when there is one, the catalog's suggestions when there is not.
-    const local = definition.optionSource
-      ? (options[definition.optionSource] ?? [])
-      : [];
-    controlProps.suggestions =
-      local.length > 0 ? local : definition.suggestions;
-  }
-
-  if (definition.control === "literalToggle") {
-    controlProps.literal = definition.literal ?? "";
-  }
-
-  if (definition.control === "permissionRules") {
-    const list = definition.key.split(".")[1];
-    if (list === "allow" || list === "ask" || list === "deny") {
-      controlProps.list = list;
+  switch (definition.control) {
+    case "switch":
+      return <SwitchControl value={value} />;
+    case "select":
+      return <SelectControl value={value} enumValues={definition.enumValues} />;
+    case "combobox":
+      return (
+        <ComboboxControl
+          value={value}
+          suggestions={offered(definition, options)}
+        />
+      );
+    case "text":
+      return <TextControl value={value} />;
+    case "number":
+      return <NumberControl value={value} />;
+    case "stringList":
+      return (
+        <StringListControl
+          value={value}
+          suggestions={offered(definition, options)}
+        />
+      );
+    case "literalToggle":
+      return (
+        <LiteralToggleControl
+          value={value}
+          literal={definition.literal ?? ""}
+        />
+      );
+    case "json":
+      return <JsonControl value={value} />;
+    case "permissionRules": {
+      const list = definition.key.split(".")[1];
+      if (list === "allow" || list === "ask" || list === "deny") {
+        return <PermissionRulesControl value={value} list={list} />;
+      }
+      return <JsonControl value={value} />;
     }
+    case "hooks":
+      return <HooksEditorControl value={value} />;
   }
-
-  return <SelectedControl {...controlProps} />;
 }

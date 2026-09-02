@@ -28,8 +28,8 @@ be reachable from other machines.
 
 ## What it covers
 
-- **Settings** — a form for every documented settings key, with dropdowns where the key has
-  enumerated values, showing the effective value and which scope set it.
+- **Settings** — a form for every documented settings key, with a searchable picker wherever
+  the key has a known set of values, showing the effective value and which scope set it.
 - **Skills**, **Plugins**, **MCP servers** — enable, disable or archive each one.
 
 Anthropic's Admin API (organisation members, workspaces, API keys, spend limits) is a

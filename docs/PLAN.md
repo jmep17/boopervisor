@@ -85,7 +85,8 @@ Vercel's Geist — https://vercel.com/geist/introduction. Vercel publishes no Re
 package for it, so: the `geist` npm package for Geist Sans and Geist Mono, Geist's colour,
 spacing, radius and shadow tokens transcribed into the Tailwind theme, and components built
 on shadcn/ui's Radix primitives restyled to match. `@geist-ui/react` is an unaffiliated
-community library and is archived; it is not used.
+community library and is archived; it is not used. Vercel's design.md is vendored as
+`DESIGN.md` and governs everything the tokens do not.
 
 ## Order of work
 

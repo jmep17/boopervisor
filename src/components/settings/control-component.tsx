@@ -2,6 +2,7 @@
 
 import {
   ComboboxControl,
+  EnvMapControl,
   HooksEditorControl,
   JsonControl,
   LiteralToggleControl,
@@ -88,5 +89,9 @@ export function ControlComponent({
     }
     case "hooks":
       return <HooksEditorControl value={value} />;
+    case "envMap":
+      return (
+        <EnvMapControl value={value} variables={offered(definition, options)} />
+      );
   }
 }

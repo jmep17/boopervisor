@@ -1,21 +1,5 @@
 import type { SettingDefinition } from "@/lib/catalog";
-
-/**
- * Splits on Markdown code spans (`` `like this` ``) and wraps the odd segments — the
- * text that was between backticks — in `<code>`. The catalog's extracted text uses code
- * spans and nothing fancier; anything else is shown raw.
- */
-function withCodeSpans(text: string) {
-  return text.split("`").map((segment, i) =>
-    i % 2 === 1 ? (
-      <code key={i} className="font-mono">
-        {segment}
-      </code>
-    ) : (
-      segment
-    )
-  );
-}
+import { withCodeSpans } from "./code-spans";
 
 /** The URL's fragment when it has one, else its path — what a reference link reads as. */
 function shortLabel(url: string): string {

@@ -111,7 +111,8 @@ describe("catalog", () => {
       (setting) =>
         setting.optionSource &&
         setting.suggestions.length === 0 &&
-        setting.optionSource !== "agents"
+        setting.optionSource !== "agents" &&
+        setting.optionSource !== "envVars"
     );
     expect(missing).toEqual([]);
   });

@@ -4,12 +4,7 @@ import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Picker, type PickerOption } from "@/components/ui/picker";
-import {
-  ChevronUpIcon,
-  ChevronDownIcon,
-  TrashIcon,
-  PlusIcon,
-} from "lucide-react";
+import { ChevronUpIcon, ChevronDownIcon, TrashIcon } from "lucide-react";
 
 export interface StringListControlProps {
   value: unknown;
@@ -94,8 +89,9 @@ export function StringListControl({
               onClick={() => handleMoveUp(index)}
               disabled={index === 0}
               title="Move up"
+              aria-label={`Move entry ${index + 1} up`}
             >
-              <ChevronUpIcon className="size-4" />
+              <ChevronUpIcon className="size-4" aria-hidden="true" />
             </Button>
             <Button
               type="button"
@@ -104,8 +100,9 @@ export function StringListControl({
               onClick={() => handleMoveDown(index)}
               disabled={index === entries.length - 1}
               title="Move down"
+              aria-label={`Move entry ${index + 1} down`}
             >
-              <ChevronDownIcon className="size-4" />
+              <ChevronDownIcon className="size-4" aria-hidden="true" />
             </Button>
             <Button
               type="button"
@@ -113,8 +110,9 @@ export function StringListControl({
               size="sm"
               onClick={() => handleRemoveEntry(index)}
               title="Remove entry"
+              aria-label={`Remove entry ${index + 1}`}
             >
-              <TrashIcon className="size-4 text-red-900" />
+              <TrashIcon className="size-4" aria-hidden="true" />
             </Button>
           </div>
         ))}
@@ -125,7 +123,6 @@ export function StringListControl({
         size="sm"
         onClick={handleAddEntry}
       >
-        <PlusIcon className="size-4" />
         Add entry
       </Button>
       <input type="hidden" name="value" value={serialized} />

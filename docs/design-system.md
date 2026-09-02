@@ -15,6 +15,7 @@ component package, so Boopervisor keeps three things of its own:
   theme does not define.
 - **Controls.** `src/components/ui/` — shadcn/ui's shape, built on Radix primitives, styled
   only from the token layer.
+- **Type roles.** `--text-heading-24/16/14` in the same theme block: page title, section, panel heading. Body is `text-sm`; only `Badge` may use `text-xs`. `DESIGN.md` is the reason.
 
 The judgement above the tokens — typography roles, restraint, copy, motion,
 accessibility — is `DESIGN.md` at the repo root, Vercel's own design.md with

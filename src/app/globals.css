@@ -290,6 +290,16 @@
   --spacing-control-sm: 2rem;
   --spacing-control-md: 2.5rem;
   --spacing-control-lg: 3rem;
+
+  /* Geist text roles (https://vercel.com/geist/text), the three this interface uses:
+     the page title, a section heading, and a heading inside a panel. Body copy is
+     Tailwind's `text-sm` (14px) and `text-base` (16px). */
+  --text-heading-24: 1.5rem;
+  --text-heading-24--line-height: 2rem;
+  --text-heading-16: 1rem;
+  --text-heading-16--line-height: 1.5rem;
+  --text-heading-14: 0.875rem;
+  --text-heading-14--line-height: 1.25rem;
 }
 
 body {

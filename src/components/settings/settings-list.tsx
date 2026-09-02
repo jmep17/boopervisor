@@ -114,7 +114,9 @@ export async function SettingsList({
   return (
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-medium text-gray-1000">Settings files</h2>
+        <h2 className="text-heading-16 font-semibold text-gray-1000">
+          Settings files
+        </h2>
         <ul className="flex flex-col gap-1 text-sm">
           {fileStatuses.map((status) => (
             <li

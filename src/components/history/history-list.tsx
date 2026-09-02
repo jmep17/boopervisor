@@ -14,11 +14,7 @@ export async function HistoryList() {
   const log = await readMutationLog();
 
   if (log.length === 0) {
-    return (
-      <div className="flex items-center justify-center rounded-base border border-gray-alpha-400 bg-background-100 px-6 py-12">
-        <p className="text-sm text-gray-900">No changes yet.</p>
-      </div>
-    );
+    return <p className="text-sm text-gray-900">No changes yet.</p>;
   }
 
   // Verify which backups still exist and capture current file snapshots

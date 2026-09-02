@@ -3,7 +3,6 @@
 import { useActionState, useState } from "react";
 import { basename } from "node:path";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -59,7 +58,9 @@ export function HistoryRow({
             </span>
           </span>
           <span className="flex shrink-0 items-center gap-2">
-            {scopeLabel ? <Badge>{scopeLabel}</Badge> : null}
+            {scopeLabel ? (
+              <span className="text-sm text-gray-900">{scopeLabel}</span>
+            ) : null}
           </span>
         </summary>
 

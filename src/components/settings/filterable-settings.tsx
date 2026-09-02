@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import type { ProjectFile } from "@/lib/config/editing-scope";
 import { matchesQuery, queryTerms } from "@/lib/config/setting-search";
 import { SettingsFileSwitch } from "./settings-file-switch";
@@ -110,7 +109,9 @@ export function FilterableSettings({
           className="flex flex-col gap-3"
           hidden={visibleKeys.size === 0}
         >
-          <h2 className="text-sm font-medium text-gray-1000">{topic.topic}</h2>
+          <h2 className="text-heading-16 font-semibold text-gray-1000">
+            {topic.topic}
+          </h2>
           <div className="flex flex-col gap-2">
             {topic.rows.map((row) => (
               <div key={row.key} hidden={!visibleKeys.has(row.key)}>
@@ -125,9 +126,11 @@ export function FilterableSettings({
         className="flex flex-col gap-3"
         hidden={uncatalogued.length === 0 || visibleUncatalogued.size === 0}
       >
-        <h2 className="flex items-center gap-2 text-sm font-medium text-gray-1000">
+        <h2 className="flex items-center gap-2 text-heading-16 font-semibold text-gray-1000">
           Uncatalogued
-          <Badge tone="warning">{uncatalogued.length}</Badge>
+          <span className="font-normal text-sm text-gray-900">
+            ({uncatalogued.length})
+          </span>
         </h2>
         <p className="max-w-prose text-sm text-gray-900">
           Keys these files hold that the catalog does not describe. Boopervisor

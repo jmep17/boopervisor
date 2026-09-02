@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { TrashIcon, PlusIcon } from "lucide-react";
+import { TrashIcon } from "lucide-react";
 import { HOOK_EVENTS, isUnknownHookEvent } from "@/lib/catalog/hooks";
 import {
   assembleHooksObject,
@@ -40,7 +40,7 @@ export function HooksEditorControl({ value }: HooksEditorControlProps) {
   if (!parsed.ok) {
     return (
       <div className="flex flex-col gap-2">
-        <p role="alert" className="text-xs text-red-900">
+        <p role="alert" className="text-sm text-red-900">
           The hooks in this file aren&apos;t in the shape Boopervisor can edit
           as a form ({parsed.problem}). Showing the value as JSON instead.
         </p>
@@ -89,15 +89,14 @@ function HooksForm({ initialHooks }: { initialHooks: HooksByEvent }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-6">
         {events.map((event) => (
-          <div
-            key={event}
-            className="flex flex-col gap-2 rounded-base border border-gray-alpha-300 p-3"
-          >
+          <div key={event} className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h4 className="font-medium text-sm text-gray-1000">{event}</h4>
+                <h4 className="text-heading-14 font-semibold text-gray-1000">
+                  {event}
+                </h4>
                 {isUnknownHookEvent(event) ? (
                   <Badge tone="warning">Not in the catalog</Badge>
                 ) : null}
@@ -108,7 +107,6 @@ function HooksForm({ initialHooks }: { initialHooks: HooksByEvent }) {
                 size="sm"
                 onClick={() => addGroup(event)}
               >
-                <PlusIcon className="size-4" />
                 Add group
               </Button>
             </div>
@@ -119,13 +117,14 @@ function HooksForm({ initialHooks }: { initialHooks: HooksByEvent }) {
                   <GroupEditor
                     key={groupIndex}
                     group={group}
+                    groupIndex={groupIndex}
                     onChange={(next) => updateGroup(event, groupIndex, next)}
                     onRemove={() => removeGroup(event, groupIndex)}
                   />
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-gray-900">
+              <p className="text-sm text-gray-900">
                 No hooks configured for this event.
               </p>
             )}
@@ -140,13 +139,16 @@ function HooksForm({ initialHooks }: { initialHooks: HooksByEvent }) {
 
 function GroupEditor({
   group,
+  groupIndex,
   onChange,
   onRemove,
 }: {
   group: HookGroup;
+  groupIndex: number;
   onChange: (group: HookGroup) => void;
   onRemove: () => void;
 }) {
+  const groupId = useId();
   const addCommandHook = () => {
     onChange({
       ...group,
@@ -166,10 +168,16 @@ function GroupEditor({
   };
 
   return (
-    <div className="flex flex-col gap-2 rounded-base border border-gray-alpha-200 p-2">
-      <div className="flex items-center gap-2 text-xs">
-        <label className="w-16 font-medium text-gray-900">Matcher:</label>
+    <div className="flex flex-col gap-2 border-l-2 border-gray-alpha-400 pl-3">
+      <div className="flex items-center gap-2 text-sm">
+        <label
+          htmlFor={`${groupId}-matcher`}
+          className="w-24 font-medium text-gray-900"
+        >
+          Matcher:
+        </label>
         <Input
+          id={`${groupId}-matcher`}
           type="text"
           value={group.matcher ?? ""}
           onChange={(e) =>
@@ -184,8 +192,9 @@ function GroupEditor({
           size="sm"
           onClick={onRemove}
           title="Remove group"
+          aria-label={`Remove group ${groupIndex + 1}`}
         >
-          <TrashIcon className="size-4 text-red-900" />
+          <TrashIcon className="size-4" aria-hidden="true" />
         </Button>
       </div>
 
@@ -197,12 +206,14 @@ function GroupEditor({
               hook={hook}
               onChange={(next) => updateHook(index, next)}
               onRemove={() => removeHook(index)}
+              hookIndex={index}
             />
           ) : (
             <OtherHookEditor
               key={index}
               hook={hook}
               onRemove={() => removeHook(index)}
+              hookIndex={index}
             />
           )
         )}
@@ -214,7 +225,6 @@ function GroupEditor({
         size="sm"
         onClick={addCommandHook}
       >
-        <PlusIcon className="size-4" />
         Add command hook
       </Button>
     </div>
@@ -223,22 +233,29 @@ function GroupEditor({
 
 function CommandHookEditor({
   hook,
+  hookIndex,
   onChange,
   onRemove,
 }: {
   hook: HookAction;
+  hookIndex: number;
   onChange: (hook: HookAction) => void;
   onRemove: () => void;
 }) {
   const command = hook.command ?? "";
+  const inputId = useId();
 
   return (
     <div className="flex items-start gap-2">
-      <label className="w-16 pt-1 font-medium text-gray-900 text-xs">
+      <label
+        htmlFor={`${inputId}-command`}
+        className="w-24 pt-1 font-medium text-gray-900 text-sm"
+      >
         Command:
       </label>
       <div className="flex flex-1 flex-col gap-1">
         <Input
+          id={`${inputId}-command`}
           type="text"
           value={command}
           onChange={(e) =>
@@ -248,8 +265,14 @@ function CommandHookEditor({
           className="font-mono"
         />
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-900">Timeout (seconds):</label>
+          <label
+            htmlFor={`${inputId}-timeout`}
+            className="text-sm text-gray-900"
+          >
+            Timeout (seconds):
+          </label>
           <Input
+            id={`${inputId}-timeout`}
             type="number"
             value={hook.timeout ?? ""}
             onChange={(e) => {
@@ -265,7 +288,7 @@ function CommandHookEditor({
             className="w-24"
           />
         </div>
-        <p className="text-xs text-gray-900">
+        <p className="text-sm text-gray-900">
           {scriptPath(command) ? (
             <>
               Runs <span className="font-mono">{scriptPath(command)}</span>.
@@ -283,8 +306,9 @@ function CommandHookEditor({
         size="sm"
         onClick={onRemove}
         title="Remove hook"
+        aria-label={`Remove hook ${hookIndex + 1}`}
       >
-        <TrashIcon className="size-4 text-red-900" />
+        <TrashIcon className="size-4" aria-hidden="true" />
       </Button>
     </div>
   );
@@ -292,18 +316,20 @@ function CommandHookEditor({
 
 function OtherHookEditor({
   hook,
+  hookIndex,
   onRemove,
 }: {
   hook: HookAction;
+  hookIndex: number;
   onRemove: () => void;
 }) {
   return (
     <div className="flex items-start gap-2">
       <div className="flex-1">
-        <pre className="overflow-x-auto rounded-base border border-gray-alpha-400 bg-background-200 p-3 font-mono text-xs text-gray-1000">
+        <pre className="overflow-x-auto rounded-base border border-gray-alpha-400 bg-background-200 p-3 font-mono text-sm text-gray-1000">
           {JSON.stringify(hook, null, 2)}
         </pre>
-        <p className="mt-1 text-xs text-gray-900">
+        <p className="mt-1 text-sm text-gray-900">
           A {hook.type} hook. Boopervisor edits command hooks as a form; edit
           this one as JSON.
         </p>
@@ -314,8 +340,9 @@ function OtherHookEditor({
         size="sm"
         onClick={onRemove}
         title="Remove hook"
+        aria-label={`Remove hook ${hookIndex + 1}`}
       >
-        <TrashIcon className="size-4 text-red-900" />
+        <TrashIcon className="size-4" aria-hidden="true" />
       </Button>
     </div>
   );

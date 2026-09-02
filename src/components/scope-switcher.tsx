@@ -64,7 +64,7 @@ export function ScopeSwitcherView({
           <span className="flex flex-col">
             <span>{option.label}</span>
             {option.detail ? (
-              <span className="font-mono text-xs text-gray-900">
+              <span className="font-mono text-sm text-gray-900">
                 {option.detail}
               </span>
             ) : null}

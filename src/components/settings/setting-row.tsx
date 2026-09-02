@@ -2,7 +2,6 @@
 
 import { useActionState, useRef, useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { writeSetting, type WriteSettingState } from "@/lib/config/actions";
@@ -94,22 +93,19 @@ export function SettingRow({
             {show(effectiveValue)}
           </span>
           {isSet ? (
-            <Badge className="shrink-0">{SCOPE_LABELS[winningScope]}</Badge>
-          ) : null}
-          {definition ? null : (
-            <Badge tone="warning" className="shrink-0">
-              Uncatalogued
-            </Badge>
-          )}
-          {dangerous ? (
-            <Badge tone="warning" className="shrink-0">
-              Confirms before writing
-            </Badge>
+            <span className="shrink-0 text-sm text-gray-900">
+              {SCOPE_LABELS[winningScope]}
+            </span>
           ) : null}
         </span>
       </summary>
 
       <div className="flex flex-col gap-4 border-t border-gray-alpha-400 px-4 py-4">
+        {definition?.dangerous ? (
+          <p className="text-sm text-gray-900">
+            Asks before writing. {definition.overrideNote}
+          </p>
+        ) : null}
         {definition ? <SettingDetails definition={definition} /> : null}
 
         <dl className="flex flex-col gap-1 text-sm">

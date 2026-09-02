@@ -37,6 +37,25 @@ describe("HooksEditorControl", () => {
     expect(inputs.some((i) => i.value === "/path/to/setup.sh")).toBe(true);
   });
 
+  test("associates each hook field label with its control", () => {
+    render(
+      <HooksEditorControl
+        value={{
+          SessionStart: [
+            {
+              matcher: "Bash",
+              hooks: [{ type: "command", command: "/setup.sh", timeout: 30 }],
+            },
+          ],
+        }}
+      />
+    );
+
+    expect(screen.getByLabelText("Matcher:")).toHaveValue("Bash");
+    expect(screen.getByLabelText("Command:")).toHaveValue("/setup.sh");
+    expect(screen.getByLabelText("Timeout (seconds):")).toHaveValue(30);
+  });
+
   test("editing the command updates the hidden field to the nested shape", async () => {
     const user = userEvent.setup();
     render(
@@ -64,7 +83,7 @@ describe("HooksEditorControl", () => {
 
     const sessionStartHeading = screen.getByText("SessionStart");
     const sessionStartSection = sessionStartHeading.closest(
-      ".rounded-base.border.border-gray-alpha-300"
+      "div.flex.flex-col"
     ) as HTMLElement;
     const addGroupButton = within(sessionStartSection).getByRole("button", {
       name: /add group/i,

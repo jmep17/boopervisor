@@ -13,6 +13,11 @@ import { ControlComponent } from "./control-component";
 import { ConfirmWriteDialog } from "./confirm-write-dialog";
 import { SettingDetails } from "./setting-details";
 
+export type WriteSettingAction = (
+  previous: WriteSettingState,
+  formData: FormData
+) => Promise<WriteSettingState>;
+
 export interface SettingRowProps {
   /** Absent for a key found on disk that the catalog does not describe. */
   definition?: SettingDefinition;
@@ -25,6 +30,8 @@ export interface SettingRowProps {
   options?: Partial<Record<OptionSource, string[]>>;
   /** Managed settings, which Boopervisor only ever reads. */
   readOnly: boolean;
+  /** The Server Action that writes; given so a test can observe what is submitted. */
+  action?: WriteSettingAction;
 }
 
 /** How a value reads in the list: JSON, because that is what is in the file. */
@@ -39,9 +46,10 @@ export function SettingRow({
   expected,
   options,
   readOnly,
+  action = writeSetting,
 }: SettingRowProps) {
   const [state, submit, pending] = useActionState<WriteSettingState, FormData>(
-    writeSetting,
+    action,
     {}
   );
   const { key, effectiveValue, winningScope, perScope } = effective;
@@ -49,6 +57,7 @@ export function SettingRow({
   const overridden = isOverridden(effective, editing);
   const formRef = useRef<HTMLFormElement>(null);
   const [confirming, setConfirming] = useState(false);
+  const [touched, setTouched] = useState(false);
   const dangerous = definition?.dangerous ?? false;
 
   // A dangerous row submits only through the dialog, whatever triggered it: a
@@ -135,8 +144,11 @@ export function SettingRow({
           <form
             ref={formRef}
             action={submit}
+            aria-label={`Edit ${key}`}
             className="flex flex-col gap-3"
+            onChange={() => setTouched(true)}
             onSubmit={(event) => {
+              setTouched(false);
               if (dangerous && !confirmedRef.current) {
                 event.preventDefault();
                 openConfirm("save");
@@ -165,6 +177,7 @@ export function SettingRow({
               error={state.error}
             >
               <ControlComponent
+                key={`${editing}:${show(perScope[editing])}`}
                 definition={definition}
                 value={perScope[editing]}
                 options={options}
@@ -208,6 +221,12 @@ export function SettingRow({
                 )
               ) : null}
             </div>
+
+            {state.ok && !touched ? (
+              <p role="status" className="text-sm text-gray-900">
+                Saved.
+              </p>
+            ) : null}
           </form>
         )}
 

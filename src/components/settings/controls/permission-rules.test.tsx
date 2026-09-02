@@ -13,54 +13,56 @@ function hiddenValue(): string {
 }
 
 describe("PermissionRulesControl", () => {
-  test("renders three separate list sections", () => {
-    render(<PermissionRulesControl value={undefined} />);
-    expect(screen.getByText("Deny (checked first)")).toBeInTheDocument();
-    expect(screen.getByText("Ask (checked second)")).toBeInTheDocument();
-    expect(screen.getByText("Allow (checked last)")).toBeInTheDocument();
+  test("renders the rules on disk", () => {
+    render(
+      <PermissionRulesControl value={["Bash", "Read(./.env)"]} list="allow" />
+    );
+    const inputs = screen.getAllByRole("textbox");
+    expect(inputs).toHaveLength(2);
+    expect(inputs[0]).toHaveValue("Bash");
+    expect(inputs[1]).toHaveValue("Read(./.env)");
   });
 
-  test("initializes with parsed permissions object", () => {
-    const value = {
-      allow: ["Bash", "Read(./.env)"],
-      ask: ["WebFetch"],
-      deny: ["PowerShell"],
-    };
-    render(<PermissionRulesControl value={value} />);
-
-    const inputs = screen.getAllByRole("textbox") as HTMLInputElement[];
-    expect(inputs.some((i) => i.value === "Bash")).toBe(true);
-    expect(inputs.some((i) => i.value === "Read(./.env)")).toBe(true);
-    expect(inputs.some((i) => i.value === "WebFetch")).toBe(true);
-    expect(inputs.some((i) => i.value === "PowerShell")).toBe(true);
+  test("renders empty for an unset key", () => {
+    render(<PermissionRulesControl value={undefined} list="allow" />);
+    expect(screen.queryAllByRole("textbox")).toHaveLength(0);
+    expect(hiddenValue()).toBe("[]");
   });
 
-  test("renders empty when value is undefined", () => {
-    render(<PermissionRulesControl value={undefined} />);
-    const inputs = screen.queryAllByRole("textbox") as HTMLInputElement[];
-    // All inputs should be empty
-    expect(inputs.every((i) => i.value === "")).toBe(true);
+  test("says where its list sits in the evaluation order", () => {
+    render(<PermissionRulesControl value={undefined} list="deny" />);
+    expect(
+      screen.getByText(/Deny rules are checked first/)
+    ).toBeInTheDocument();
   });
 
-  test("adds new rules when Add buttons are clicked", async () => {
+  test("submits a JSON array, dropping blank rules", async () => {
     const user = userEvent.setup();
-    render(<PermissionRulesControl value={undefined} />);
+    render(<PermissionRulesControl value={["Bash"]} list="allow" />);
 
-    const addAllowButton = screen.getByRole("button", { name: /add allow/i });
-    await user.click(addAllowButton);
+    await user.click(screen.getByRole("button", { name: /add rule/i }));
 
-    const addAskButton = screen.getByRole("button", { name: /add ask/i });
-    await user.click(addAskButton);
-
-    const inputs = screen.getAllByRole("textbox") as HTMLInputElement[];
-    // Should have at least one input in allow and one in ask
-    expect(inputs.length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByRole("textbox")).toHaveLength(2);
+    expect(JSON.parse(hiddenValue())).toEqual(["Bash"]);
   });
 
-  test("removes rules when remove button is clicked", async () => {
+  test("flags a rule the syntax refuses", async () => {
+    const user = userEvent.setup();
+    render(<PermissionRulesControl value={[""]} list="allow" />);
+
+    const input = screen.getByRole("textbox", { name: "Rule 1" });
+    await user.type(input, "Bash(");
+
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText(/Invalid syntax/)).toBeInTheDocument();
+    // The server is the final judge, so the text still travels.
+    expect(JSON.parse(hiddenValue())).toEqual(["Bash("]);
+  });
+
+  test("removes a rule", async () => {
     const user = userEvent.setup();
     render(
-      <PermissionRulesControl value={{ allow: ["Bash", "PowerShell"] }} />
+      <PermissionRulesControl value={["Bash", "PowerShell"]} list="allow" />
     );
 
     const removeButtons = screen.getAllByRole("button", {
@@ -68,57 +70,23 @@ describe("PermissionRulesControl", () => {
     });
     await user.click(removeButtons[0]);
 
-    const inputs = screen.getAllByRole("textbox") as HTMLInputElement[];
-    expect(inputs.some((i) => i.value === "PowerShell")).toBe(true);
-    expect(inputs.some((i) => i.value === "Bash")).toBe(false);
+    const inputs = screen.getAllByRole("textbox");
+    expect(inputs).toHaveLength(1);
+    expect(inputs[0]).toHaveValue("PowerShell");
+    expect(JSON.parse(hiddenValue())).toEqual(["PowerShell"]);
   });
 
-  test("reorders rules with move up/down buttons", async () => {
+  test("reorders rules with the move buttons", async () => {
     const user = userEvent.setup();
     render(
-      <PermissionRulesControl value={{ allow: ["Bash", "PowerShell"] }} />
+      <PermissionRulesControl value={["Bash", "PowerShell"]} list="allow" />
     );
 
-    const moveDownButton = screen.getAllByRole("button", {
-      name: /move down/i,
-    })[0];
-    await user.click(moveDownButton);
+    await user.click(screen.getAllByRole("button", { name: /move down/i })[0]);
 
-    const inputs = screen.getAllByRole("textbox") as HTMLInputElement[];
-    const allowInputs = inputs.slice(0, 2); // First two are the allow rules
-    expect(allowInputs[0].value).toBe("PowerShell");
-    expect(allowInputs[1].value).toBe("Bash");
-  });
-
-  test("carries the whole structure to the server as JSON", () => {
-    render(
-      <PermissionRulesControl
-        value={{
-          allow: ["Bash"],
-          ask: ["WebFetch"],
-          deny: ["PowerShell"],
-        }}
-      />
-    );
-
-    const submitted = JSON.parse(hiddenValue());
-    expect(submitted.allow).toEqual(["Bash"]);
-    expect(submitted.ask).toEqual(["WebFetch"]);
-    expect(submitted.deny).toEqual(["PowerShell"]);
-  });
-
-  test("omits empty lists from the submitted value", () => {
-    render(
-      <PermissionRulesControl
-        value={{
-          allow: ["Bash"],
-        }}
-      />
-    );
-
-    const submitted = JSON.parse(hiddenValue());
-    expect(submitted.allow).toBeDefined();
-    expect(submitted.ask).toBeUndefined();
-    expect(submitted.deny).toBeUndefined();
+    const inputs = screen.getAllByRole("textbox");
+    expect(inputs[0]).toHaveValue("PowerShell");
+    expect(inputs[1]).toHaveValue("Bash");
+    expect(JSON.parse(hiddenValue())).toEqual(["PowerShell", "Bash"]);
   });
 });

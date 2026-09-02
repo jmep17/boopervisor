@@ -49,7 +49,14 @@ export function ControlComponent({
   }
 
   if (definition.control === "literalToggle") {
-    controlProps.literal = definition.literal;
+    controlProps.literal = definition.literal ?? "";
+  }
+
+  if (definition.control === "permissionRules") {
+    const list = definition.key.split(".")[1];
+    if (list === "allow" || list === "ask" || list === "deny") {
+      controlProps.list = list;
+    }
   }
 
   return <SelectedControl {...controlProps} />;

@@ -64,8 +64,9 @@ Out of scope, deliberately:
   the page also chooses which of its two files an edit lands in, `.claude/settings.json` or
   `.claude/settings.local.json`; the choice travels in the URL.
 - Managed settings are shown read-only.
-- Scalars and enumerated keys get typed controls, and any key with enumerated values gets a
-  dropdown. String arrays get a list editor. `permissions` and `hooks` get purpose-built
+- Scalars and enumerated keys get typed controls, and any key with a known set of values gets
+  a searchable picker; a closed set refuses other text, an open one offers the set and accepts
+  anything. String arrays get a list editor. `permissions` and `hooks` get purpose-built
   editors, because they are edited most and a typo in either silently breaks Claude Code.
   `sandbox`, `env` and `pluginConfigs` get a validated JSON editor until they prove they need
   more.

@@ -46,12 +46,14 @@ scope) → `.claude/settings.local.json` → `.claude/settings.json` → `~/.cla
 
 ## Answers to the questions this pass had to close
 
-**Enumerated values.** 27 keys have a genuinely closed set and get a dropdown. Four more looked
+**Enumerated values.** 27 keys have a genuinely closed set and get a strict picker. Four more looked
 enumerated to the extractor but are not, because the reference gives examples in prose rather
 than a closed set: `language` ("any language name ... Claude Code doesn't validate it"),
 `advisorModel` and `model` (an alias *or* a full model ID), and `outputStyle` (a built-in or a
-custom style, which lives on disk). Those get a combobox. `theme` is a closed set of seven
-plus two open forms, `custom:<slug>` and `custom:<plugin-name>:<slug>`.
+custom style, which lives on disk). Those get a free picker. `theme` is a closed set of seven
+plus two open forms, `custom:<slug>` and `custom:<plugin-name>:<slug>`. `theme`'s seven names
+are suggestions in the catalog, not `enumValues`, because the validator treats `enumValues`
+as closed and the custom forms must pass.
 
 - `effortLevel`: `low`, `medium`, `high`, `xhigh`
 - `permissions.defaultMode`: `default`, `acceptEdits`, `plan`, `auto`, `dontAsk`,

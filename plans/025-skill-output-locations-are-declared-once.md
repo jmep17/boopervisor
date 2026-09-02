@@ -8,11 +8,11 @@
 > lives) unless a reviewer dispatched you and told you they maintain the index.
 >
 > **Drift check (run first)**:
-> `git diff --stat 547101c..HEAD -- AGENTS.md CLAUDE.md .claude/settings.json scripts/ docs/agents/`
+> `git diff --stat eff98d2..HEAD -- AGENTS.md CLAUDE.md .claude/settings.json scripts/ docs/agents/`
 > If any of those files changed since this plan was written, compare the
 > "Current state" excerpts against the live code before proceeding; on a
 > mismatch, treat it as a STOP condition. (`plans/` is deliberately not in
-> the list: this plan and its index row were committed after `547101c`, so
+> the list: this plan and its index row were committed after the original planning commit, so
 > `plans/` always differs.)
 >
 > Run every command below in bash (the `Bash` tool; Git Bash on Windows).
@@ -26,8 +26,8 @@
 - **Risk**: LOW
 - **Depends on**: none
 - **Category**: dx
-- **Planned at**: commit `547101c`, 2026-09-01 (reviewed three times the same day; see
-  "Review log" at the end)
+- **Planned at**: commit `eff98d2`, 2026-09-02 (originally written at `547101c` and
+  reconciled after plans 018–024 landed; see "Review log" at the end)
 
 ## Portability contract
 
@@ -125,7 +125,7 @@ the clone.
 
 ## Current state
 
-Files this plan touches or depends on, as they are at `547101c`:
+Files this plan touches or depends on, as they are at `eff98d2`:
 
 - `CLAUDE.md` — exactly one line, `@AGENTS.md`, which makes Claude Code read `AGENTS.md`
   inline. **This is the file that gets the new block.** Reason: Matt Pocock's
@@ -133,8 +133,9 @@ Files this plan touches or depends on, as they are at `547101c`:
   exists, edit it. Else if `AGENTS.md` exists, edit it.") and updates an existing
   `## Agent skills` block in place — so a block in `CLAUDE.md` is found and maintained by
   that skill, while a block in `AGENTS.md` would get a duplicate appended to `CLAUDE.md`.
-- `AGENTS.md` (678 bytes) — contains **only** the Next.js block, wrapped in the marker
-  lines `<!-- BEGIN:nextjs-agent-rules -->` and `<!-- END:nextjs-agent-rules -->`.
+- `AGENTS.md` — contains the repo's `# Design` instructions followed by the Next.js block,
+  wrapped in the marker lines `<!-- BEGIN:nextjs-agent-rules -->` and
+  `<!-- END:nextjs-agent-rules -->`.
   `next dev` maintains it (`writeAgentFiles` in
   `node_modules/next/dist/server/lib/generate-agent-files.js`): while `AGENTS.md` hosts the
   marked block, `next dev` upserts `AGENTS.md` only and never touches `CLAUDE.md`. **This
@@ -144,21 +145,23 @@ Files this plan touches or depends on, as they are at `547101c`:
   `.git/info/exclude`). `.claude/settings.json` is **not** git-ignored
   (`git check-ignore .claude/settings.json` prints nothing), so it can be committed.
   There is no `.claude/skills/`, `.claude/commands/` or `.claude/agents/` in the repo.
-- `plans/` — `README.md` (the index) plus plan files `001`–`011`, `013`–`017` (there is
-  no `012`) and this file. All are advisor output from shadcn's `improve`.
+- `plans/` — `README.md` (the index) plus plan files `001`–`011`, `013`–`025` (there is
+  no `012`). All are advisor output from shadcn's `improve`; plans 018–024 are already
+  DONE, leaving this file as the only TODO.
 - `.scratch/boopervisor-v1/` — `AGENT-BRIEF.md` and `issues/01-…11-….md`: Matt Pocock's
   `to-tickets` local tracker output. `docs/adr/0001–0003`, `CONTEXT.md` at the root.
 - `artifacts/plans/2026-08-28-boopervisor-v1.html` — `second-brain` `plan-pages` output.
 - `docs/agents/` — does not exist. `docs/` holds `adr/`, `design-system.md`, `PLAN.md`,
   `settings-catalog.md`, `verified-file-formats.md`.
-- `scripts/` — `extract-hooks-reference.ts`, `extract-settings-reference.ts`: bun scripts
+- `scripts/` — `extract-hooks-reference.ts`, `extract-settings-reference.ts` and
+  `extract-env-vars-reference.ts`: bun scripts
   run with `bun run scripts/<name>.ts`. `tsconfig.json` includes `**/*.ts`, so anything
   added here is typechecked; `eslint.config.mjs` ignores only `.next/**`, `out/**`,
   `build/**`, `next-env.d.ts` and `.claude/worktrees/**`, so it is linted too.
   `@types/bun` is a devDependency, so `import.meta.main` typechecks.
 - Tests live next to the code as `*.test.ts` and run with `bun test`. `bunfig.toml`
   preloads `tests/register-dom.ts` and `tests/setup.ts` for every test file (harmless here).
-  **Baseline at `547101c`: `bun test` → `398 pass, 0 fail` across 48 files in about 1.3 s.**
+  **Baseline at `eff98d2`: `bun test` → `477 pass, 0 fail` across 54 files in about 3 s.**
   It does not pick up anything under `.claude/worktrees/**`.
 - Pre-commit (`.husky/pre-commit`) runs `bunx lint-staged` (prettier on every staged file,
   `.lintstagedrc` is `{"*": "prettier --ignore-unknown --write"}`; `.prettierrc` has
@@ -265,7 +268,7 @@ Conventions to match:
 | Typecheck   | `bun run typecheck`                   | exit 0, no errors              |
 | Lint        | `bun run lint`                        | exit 0                         |
 | Guard tests | `bun test scripts/skill-output-guard` | 9 pass, 0 fail                 |
-| All tests   | `bun test`                            | 407 pass, 0 fail (398 + 9 new) |
+| All tests   | `bun test`                            | 486 pass, 0 fail (477 + 9 new) |
 
 ## Scope
 
@@ -290,7 +293,7 @@ Conventions to match:
   direction candidate, not this plan.
 - `CONTEXT.md`, `docs/adr/**`, `.scratch/**`, `artifacts/**` — referenced, never edited or
   moved.
-- The bodies of plans `001`–`017` — DONE and historical. Never mass-edit them, even if
+- The bodies of plans `001`–`024` — DONE and historical. Never mass-edit them, even if
   the user relocates `plans/`.
 - `.claude/settings.local.json` — not created. The override must be committed so it
   travels with every clone.
@@ -570,7 +573,7 @@ If your output contradicts an existing ADR, surface it explicitly rather than si
 - `head -1 CLAUDE.md` → `@AGENTS.md` (include still first)
 - `grep -c "^## Agent skills" CLAUDE.md` → `1`
 - `grep -c '`[A-Z_]*_DIR`' CLAUDE.md` → `7` (one per table row; no other line matches)
-- `git diff --quiet 547101c -- AGENTS.md && echo unchanged` → `unchanged`
+- `git diff --quiet eff98d2 -- AGENTS.md && echo unchanged` → `unchanged`
 - `test -f docs/agents/issue-tracker.md && test -f docs/agents/domain.md && echo ok` → `ok`
 
 ### Step 4: Test the guard, and test that the two declarations agree
@@ -759,7 +762,7 @@ in `.claude/settings.json` names this directory. Older plan bodies say `plans/RE
 read that as this file."
 
 **Verify**: for every changed row, `test ! -e <old> && test -d <new> && echo moved` →
-`moved`; then `bun test` → `407 pass`. With no changed rows: `git status --short` shows no
+`moved`; then `bun test` → `486 pass`. With no changed rows: `git status --short` shows no
 rename (`R`) entries.
 
 ## Integration scenarios, end to end
@@ -822,7 +825,7 @@ None of these needs executor action; they are the reasoning behind the steps abo
   table equals the `*_DIR` keys of the settings env (same count, same values); every
   `OUTPUTS` entry has a row; no row's directory is another row's retired default.
 - Pattern: `src/lib/skills/read.test.ts` (`bun:test`, `describe`/`test`/`expect`).
-- Verification: `bun test` → `407 pass, 0 fail` (398 at `547101c` plus the 9 new).
+- Verification: `bun test` → `486 pass, 0 fail` (477 at `eff98d2` plus the 9 new).
 - There is no manual test: with today's values the hook is dormant by design.
 
 ## Done criteria
@@ -832,10 +835,10 @@ Machine-checkable. ALL must hold:
 - [ ] Step 0's output line is in the report
 - [ ] `bun run typecheck` exits 0
 - [ ] `bun run lint` exits 0
-- [ ] `bun test` → `407 pass, 0 fail`; `bun test scripts/skill-output-guard` → `9 pass`
+- [ ] `bun test` → `486 pass, 0 fail`; `bun test scripts/skill-output-guard` → `9 pass`
 - [ ] Step 2 probe 1 exits 2 with the "retired in this repo" message; probes 2 and 3 exit 0
 - [ ] `head -1 CLAUDE.md` is `@AGENTS.md`, `grep -c "^## Agent skills" CLAUDE.md` is `1`, `grep -c '`[A-Z_]*_DIR`' CLAUDE.md` is `7`
-- [ ] `git diff --quiet 547101c -- AGENTS.md` exits 0 (file untouched)
+- [ ] `git diff --quiet eff98d2 -- AGENTS.md` exits 0 (file untouched)
 - [ ] `bun -e 'const s = require("./.claude/settings.json"); console.log(Object.keys(s.env).length, s.hooks.PreToolUse.length)'` → `7 1`
 - [ ] The Step 5 `sh -c` probe exits 0, with and without `bun` on `PATH`
 - [ ] `grep -rn "/Users/\|/opt/homebrew\|/home/" .claude/settings.json scripts/skill-output-guard.ts scripts/skill-output-guard.test.ts CLAUDE.md docs/agents/` prints nothing (no machine-specific path in any committed file)
@@ -851,13 +854,13 @@ Stop and report back (do not improvise) if:
 
 - `CLAUDE.md` at the start is anything other than the single line `@AGENTS.md`, or an
   `## Agent skills` heading already exists in `CLAUDE.md` or `AGENTS.md` — someone ran
-  `/setup-matt-pocock-skills` or edited it since `547101c`; merging two blocks is a human
+  `/setup-matt-pocock-skills` or edited it since `eff98d2`; merging two blocks is a human
   decision.
-- `AGENTS.md` at the start contains anything other than the two marker lines and the
-  Next.js text between them — the drift is somebody's edit; report it.
+- `AGENTS.md` at the start differs from the `# Design` instructions followed by the marked
+  Next.js block recorded at `eff98d2` — the drift is somebody's edit; report it.
 - `.claude/settings.json` already exists in the repo.
 - `docs/agents/` already exists.
-- `bun test` before you change anything does not report `398 pass, 0 fail` — the baseline
+- `bun test` before you change anything does not report `477 pass, 0 fail` — the baseline
   moved; report the numbers and stop.
 - After Step 5, the guard refuses one of **your own** writes — with this plan's values it
   must refuse nothing, so that is a bug in `refusal`; report the message and the path
@@ -905,7 +908,7 @@ Stop and report back (do not improvise) if:
 - Reviewer focus: the `refusal` path normalisation (an absolute `file_path` is what Claude
   Code actually sends; backslashes on Windows); that the `CLAUDE.md` table survived
   prettier with its column order intact (the test parses columns 2 and 3); that
-  `AGENTS.md` is byte-identical to `547101c`; that the hook command still has the
+  `AGENTS.md` is byte-identical to `eff98d2`; that the hook command still has the
   `command -v bun` prefix; and that no committed file names a machine-specific path.
 - Deferred, on purpose: rewriting the path with the hook's `updatedInput` (see the
   "Claude Code facts" section for why a refusal is preferred). A Boopervisor panel that
@@ -913,6 +916,19 @@ Stop and report back (do not improvise) if:
   index.
 
 ## Review log
+
+2026-09-02, reconcile before `/improve execute next` at `eff98d2`:
+
+- Plans 018–024 had landed since the original plan. The clean baseline is now 477 tests
+  across 54 files, so the expected total after this plan is 486; every operational gate
+  and STOP condition now uses those numbers.
+- `AGENTS.md` intentionally gained the repo's `# Design` instructions in plan 020. Its
+  current bytes, including that section and the generated Next.js block, are the new
+  untouched-file baseline.
+- `scripts/extract-env-vars-reference.ts` now sits beside the two reference extractors.
+  It does not overlap this plan's new guard files and is recorded in Current state.
+- No other in-scope precondition drifted: `CLAUDE.md` remains the single line
+  `@AGENTS.md`; `.claude/settings.json` and `docs/agents/` remain absent.
 
 2026-09-01, `/improve review-plan` against the live repo and the Claude Code docs:
 

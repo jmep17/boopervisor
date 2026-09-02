@@ -29,7 +29,7 @@ function shortLabel(url: string): string {
 
 const hasPerSessionOverride = (definition: SettingDefinition) =>
   definition.perSessionOverrides !== "" &&
-  definition.perSessionOverrides !== "—";
+  definition.perSessionOverrides !== "—"; // design-tokens-allow: the reference's own placeholder
 
 /** The reference's own words about a setting, which no settings file can tell the user. */
 export function SettingDetails({

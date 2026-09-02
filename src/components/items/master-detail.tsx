@@ -66,7 +66,7 @@ export function MasterDetail({
                 )}
               >
                 <span className="flex items-center justify-between gap-2">
-                  <span className="truncate">{item.label}</span>
+                  <span className="min-w-0 truncate">{item.label}</span>
                   {STATE_TONE[item.state] ? (
                     <Badge tone={STATE_TONE[item.state]}>{item.state}</Badge>
                   ) : null}

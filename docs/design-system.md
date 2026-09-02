@@ -16,6 +16,10 @@ component package, so Boopervisor keeps three things of its own:
 - **Controls.** `src/components/ui/` — shadcn/ui's shape, built on Radix primitives, styled
   only from the token layer.
 
+The judgement above the tokens — typography roles, restraint, copy, motion,
+accessibility — is `DESIGN.md` at the repo root, Vercel's own design.md with
+a note on what applies to a product interface.
+
 ## Where the token values came from
 
 Extracted 2026-08-28 from Vercel's own published stylesheets, not retyped from screenshots:

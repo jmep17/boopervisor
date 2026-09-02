@@ -58,7 +58,7 @@ export function ConfirmWriteDialog({
             onClick={onConfirm}
             disabled={pending}
           >
-            {pending ? "Writing..." : "Write it"}
+            {pending ? "Writing…" : "Write it"}
           </Button>
         </DialogFooter>
       </DialogContent>

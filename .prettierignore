@@ -2,3 +2,7 @@
 node_modules
 bun.lock
 tsconfig.tsbuildinfo
+
+# Vendored verbatim from https://vercel.com/design.md; reformatting it would
+# rewrite text this repo promises to reproduce unchanged.
+DESIGN.md

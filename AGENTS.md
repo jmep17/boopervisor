@@ -1,3 +1,10 @@
+# Design
+
+Read `DESIGN.md` before changing anything under `src/app/` or
+`src/components/`. It is Vercel's design.md with a section on which rules
+apply here; `docs/design-system.md` is the token layer under it, and
+`bun test src/app/design-tokens.test.ts` enforces the checkable rules.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

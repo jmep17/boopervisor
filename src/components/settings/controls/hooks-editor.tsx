@@ -269,7 +269,7 @@ function CommandHookEditor({
           {scriptPath(command) ? (
             <>
               Runs <span className="font-mono">{scriptPath(command)}</span>.
-              Boopervisor never writes that file — open it to change what the
+              Boopervisor never writes that file. Open it to change what the
               hook does.
             </>
           ) : (

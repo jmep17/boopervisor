@@ -24,7 +24,7 @@ const FILE_STATES: Record<string, string> = {
   ok: "read",
   missing: "not present",
   empty: "empty",
-  "invalid-json": "not valid JSON — left untouched",
+  "invalid-json": "not valid JSON, left untouched",
 };
 
 /**

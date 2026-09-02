@@ -58,6 +58,23 @@ function sourceFiles(): string[] {
     .sort();
 }
 
+/**
+ * Source split into lines twice: as written, and with comments blanked out
+ * (block comments become the same number of empty lines, so indices match).
+ * Copy rules check the stripped line; the allow marker is read from the original.
+ */
+function copyLines(source: string): {
+  original: string[];
+  stripped: string[];
+} {
+  const stripped = source
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ""))
+    .replace(/(^|[^:])\/\/.*$/gm, "$1");
+  return { original: source.split("\n"), stripped: stripped.split("\n") };
+}
+
+const ALLOW_MARKER = "design-tokens-allow";
+
 describe("design tokens", () => {
   test("the theme defines the colours this test relies on", () => {
     // Guards the regex above against a rename in globals.css making the scan vacuous.
@@ -105,6 +122,94 @@ describe("design tokens", () => {
       for (const match of source.matchAll(LOW_CONTRAST_TEXT)) {
         offenders.push(`${file}: ${match[0]}`);
       }
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+
+describe("DESIGN.md rules", () => {
+  test("interface copy has no em dashes", () => {
+    const offenders: string[] = [];
+    for (const file of sourceFiles()) {
+      const source = readFileSync(join(ROOT, file), "utf8");
+      const { original, stripped } = copyLines(source);
+      stripped.forEach((line, i) => {
+        if (original[i].includes(ALLOW_MARKER)) return;
+        if (line.includes("—"))
+          offenders.push(`${file}:${i + 1}: ${line.trim()}`);
+      });
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  test("an ellipsis is the character, not three dots", () => {
+    const offenders: string[] = [];
+    const THREE_DOTS = /[A-Za-z]\.\.\./;
+    for (const file of sourceFiles()) {
+      const source = readFileSync(join(ROOT, file), "utf8");
+      const { stripped } = copyLines(source);
+      stripped.forEach((line, i) => {
+        if (THREE_DOTS.test(line))
+          offenders.push(`${file}:${i + 1}: ${line.trim()}`);
+      });
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  test("no all-caps eyebrows or tracked labels", () => {
+    const offenders: string[] = [];
+    const EYEBROW = /\b(?:uppercase|tracking-(?:wide|wider|widest))\b/;
+    for (const file of sourceFiles()) {
+      const source = readFileSync(join(ROOT, file), "utf8");
+      const { stripped } = copyLines(source);
+      stripped.forEach((line, i) => {
+        if (EYEBROW.test(line))
+          offenders.push(`${file}:${i + 1}: ${line.trim()}`);
+      });
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  test("no decorative effects", () => {
+    const offenders: string[] = [];
+    const DECORATIVE =
+      /\b(?:bg-gradient-|backdrop-blur|blur-|animate-(?!none\b)|shadow-\[)/;
+    for (const file of sourceFiles()) {
+      const source = readFileSync(join(ROOT, file), "utf8");
+      const { stripped } = copyLines(source);
+      stripped.forEach((line, i) => {
+        if (DECORATIVE.test(line))
+          offenders.push(`${file}:${i + 1}: ${line.trim()}`);
+      });
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  test("no arbitrary type values", () => {
+    const offenders: string[] = [];
+    const ARBITRARY_TYPE = /\b(?:text|leading|font|tracking)-\[/;
+    for (const file of sourceFiles()) {
+      const source = readFileSync(join(ROOT, file), "utf8");
+      const { stripped } = copyLines(source);
+      stripped.forEach((line, i) => {
+        if (ARBITRARY_TYPE.test(line))
+          offenders.push(`${file}:${i + 1}: ${line.trim()}`);
+      });
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  test("motion is colour transitions only", () => {
+    const offenders: string[] = [];
+    const OTHER_TRANSITION = /\btransition-(?!colors\b)[a-z]+/;
+    for (const file of sourceFiles()) {
+      if (file === "src/components/ui/switch.tsx") continue; // the thumb slides
+      const source = readFileSync(join(ROOT, file), "utf8");
+      const { stripped } = copyLines(source);
+      stripped.forEach((line, i) => {
+        if (OTHER_TRANSITION.test(line))
+          offenders.push(`${file}:${i + 1}: ${line.trim()}`);
+      });
     }
     expect(offenders).toEqual([]);
   });

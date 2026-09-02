@@ -51,10 +51,11 @@ export function HistoryRow({
     <>
       <details className="group rounded-base border border-gray-alpha-400 bg-background-100">
         <summary className="flex cursor-pointer items-baseline justify-between gap-4 px-4 py-3">
-          <span className="flex flex-col gap-1">
+          <span className="flex min-w-0 flex-col gap-1">
             <span className="text-sm text-gray-1000">{targetLabel}</span>
             <span className="text-sm text-gray-900">
-              <span className="font-mono">{record.path}</span> {timeStr}
+              <span className="break-all font-mono">{record.path}</span>{" "}
+              {timeStr}
             </span>
           </span>
           <span className="flex shrink-0 items-center gap-2">
@@ -142,7 +143,7 @@ export function HistoryRow({
                 Cancel
               </Button>
               <Button type="submit" disabled={pending}>
-                {pending ? "Restoring..." : "Restore"}
+                {pending ? "Restoring…" : "Restore"}
               </Button>
             </DialogFooter>
           </form>

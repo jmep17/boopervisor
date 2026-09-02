@@ -144,6 +144,7 @@ export function SettingRow({
           <form
             ref={formRef}
             action={submit}
+            aria-label={`Edit ${key}`}
             className="flex flex-col gap-3"
             onChange={() => setTouched(true)}
             onSubmit={(event) => {

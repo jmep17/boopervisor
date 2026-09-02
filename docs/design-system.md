@@ -37,3 +37,5 @@ the document element override it.
 
 Geist can change under us — the same drift ADR 0003 accepts for the settings catalog. The
 mitigation is the same: the values live in one file, with this note saying where to look.
+
+- **Type roles.** `--text-heading-24/16/14` in the same theme block: page title, section, panel heading. Body is `text-sm`; only `Badge` may use `text-xs`. `DESIGN.md` is the reason.

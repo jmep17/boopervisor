@@ -170,6 +170,19 @@ describe("DESIGN.md rules", () => {
     expect(offenders).toEqual([]);
   });
 
+  test("font sizes are the type roles or body sizes", () => {
+    const offenders: string[] = [];
+    const ARBITRARY_SIZE = /\btext-(?:xs|lg|xl|2xl|3xl|4xl|5xl)\b/g;
+    for (const file of sourceFiles()) {
+      if (file === "src/components/ui/badge.tsx") continue;
+      const source = readFileSync(join(ROOT, file), "utf8");
+      for (const match of source.matchAll(ARBITRARY_SIZE)) {
+        offenders.push(`${file}: ${match[0]}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
   test("no decorative effects", () => {
     const offenders: string[] = [];
     const DECORATIVE =

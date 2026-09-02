@@ -145,7 +145,7 @@ export async function McpServerList({
       {server ? (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <h2 className="text-sm font-medium text-gray-1000">
+            <h2 className="text-heading-16 font-semibold text-gray-1000">
               {server.name}
             </h2>
             <p className="font-mono text-sm text-gray-900">{server.file}</p>
@@ -172,7 +172,7 @@ export async function McpServerList({
           />
 
           <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-medium text-gray-1000">
+            <h3 className="text-heading-14 font-semibold text-gray-1000">
               Configuration
             </h3>
             <pre className="overflow-x-auto rounded-base border border-gray-alpha-400 bg-background-200 p-3 font-mono text-sm text-gray-1000">
@@ -186,7 +186,7 @@ export async function McpServerList({
 
           {approvalNote ? (
             <div className="flex flex-col gap-1">
-              <h3 className="text-sm font-medium text-gray-1000">
+              <h3 className="text-heading-14 font-semibold text-gray-1000">
                 Claude Code&apos;s own record
               </h3>
               <p className="text-sm text-gray-900">{approvalNote}</p>

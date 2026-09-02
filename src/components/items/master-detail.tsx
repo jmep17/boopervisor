@@ -19,6 +19,11 @@ const STATE_TONE = {
   disabled: "warning",
   archived: "neutral",
 } as const;
+const STATE_LABEL = {
+  enabled: "Enabled",
+  disabled: "Disabled",
+  archived: "Archived",
+} as const;
 
 /**
  * The shape every item listing takes: the items on the left, the selected one's detail and
@@ -68,11 +73,13 @@ export function MasterDetail({
                 <span className="flex items-center justify-between gap-2">
                   <span className="min-w-0 truncate">{item.label}</span>
                   {STATE_TONE[item.state] ? (
-                    <Badge tone={STATE_TONE[item.state]}>{item.state}</Badge>
+                    <Badge tone={STATE_TONE[item.state]}>
+                      {STATE_LABEL[item.state]}
+                    </Badge>
                   ) : null}
                 </span>
                 {item.detail ? (
-                  <span className="truncate text-xs text-gray-900">
+                  <span className="truncate text-sm text-gray-900">
                     {item.detail}
                   </span>
                 ) : null}

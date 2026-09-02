@@ -74,11 +74,11 @@ export async function PluginList({
       {plugin ? (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <h2 className="text-sm font-medium text-gray-1000">
+            <h2 className="text-heading-16 font-semibold text-gray-1000">
               {plugin.plugin.name}
             </h2>
             <p className="text-sm text-gray-900">{plugin.plugin.marketplace}</p>
-            <p className="font-mono text-xs text-gray-900">
+            <p className="font-mono text-sm text-gray-900">
               {plugin.plugin.manifestPath ??
                 `${plugin.plugin.path}/plugin.json`}
             </p>
@@ -101,7 +101,9 @@ export async function PluginList({
           />
 
           <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-medium text-gray-1000">Metadata</h3>
+            <h3 className="text-heading-14 font-semibold text-gray-1000">
+              Metadata
+            </h3>
             <pre className="overflow-x-auto rounded-base border border-gray-alpha-400 bg-background-200 p-3 font-mono text-sm text-gray-1000">
               {plugin.plugin.metadata
                 ? JSON.stringify(plugin.plugin.metadata, null, 2)

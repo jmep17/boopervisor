@@ -78,8 +78,10 @@ export async function SkillList({
       {skill ? (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <h2 className="text-sm font-medium text-gray-1000">{skill.name}</h2>
-            <p className="font-mono text-xs text-gray-900">
+            <h2 className="text-heading-16 font-semibold text-gray-1000">
+              {skill.name}
+            </h2>
+            <p className="font-mono text-sm text-gray-900">
               {skill.skill.path}/SKILL.md
             </p>
           </div>
@@ -101,7 +103,9 @@ export async function SkillList({
           />
 
           <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-medium text-gray-1000">Metadata</h3>
+            <h3 className="text-heading-14 font-semibold text-gray-1000">
+              Metadata
+            </h3>
             <pre className="overflow-x-auto rounded-base border border-gray-alpha-400 bg-background-200 p-3 font-mono text-sm text-gray-1000">
               {JSON.stringify(skill.skill.metadata, null, 2)}
             </pre>

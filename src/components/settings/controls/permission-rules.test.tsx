@@ -82,7 +82,7 @@ describe("PermissionRulesControl", () => {
       <PermissionRulesControl value={["Bash", "PowerShell"]} list="allow" />
     );
 
-    await user.click(screen.getAllByRole("button", { name: /move down/i })[0]);
+    await user.click(screen.getByRole("button", { name: /move rule 1 down/i }));
 
     const inputs = screen.getAllByRole("textbox");
     expect(inputs[0]).toHaveValue("PowerShell");

@@ -3,12 +3,7 @@
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  ChevronUpIcon,
-  ChevronDownIcon,
-  TrashIcon,
-  PlusIcon,
-} from "lucide-react";
+import { ChevronUpIcon, ChevronDownIcon, TrashIcon } from "lucide-react";
 import { validatePermissionRule } from "@/lib/config/permissions";
 
 export type PermissionList = "allow" | "ask" | "deny";
@@ -97,8 +92,9 @@ export function PermissionRulesControl({
                   onClick={() => moveUp(index)}
                   disabled={index === 0}
                   title="Move up"
+                  aria-label={`Move rule ${index + 1} up`}
                 >
-                  <ChevronUpIcon className="size-4" />
+                  <ChevronUpIcon className="size-4" aria-hidden="true" />
                 </Button>
                 <Button
                   type="button"
@@ -107,8 +103,9 @@ export function PermissionRulesControl({
                   onClick={() => moveDown(index)}
                   disabled={index === rules.length - 1}
                   title="Move down"
+                  aria-label={`Move rule ${index + 1} down`}
                 >
-                  <ChevronDownIcon className="size-4" />
+                  <ChevronDownIcon className="size-4" aria-hidden="true" />
                 </Button>
                 <Button
                   type="button"
@@ -116,8 +113,9 @@ export function PermissionRulesControl({
                   size="sm"
                   onClick={() => remove(index)}
                   title="Remove rule"
+                  aria-label={`Remove rule ${index + 1}`}
                 >
-                  <TrashIcon className="size-4 text-red-900" />
+                  <TrashIcon className="size-4" aria-hidden="true" />
                 </Button>
               </div>
               {problem ? (
@@ -135,7 +133,6 @@ export function PermissionRulesControl({
         size="sm"
         onClick={() => setRules([...rules, ""])}
       >
-        <PlusIcon className="size-4" />
         Add rule
       </Button>
 

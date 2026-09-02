@@ -64,7 +64,7 @@ describe("HooksEditorControl", () => {
 
     const sessionStartHeading = screen.getByText("SessionStart");
     const sessionStartSection = sessionStartHeading.closest(
-      ".rounded-base.border.border-gray-alpha-300"
+      "div.flex.flex-col"
     ) as HTMLElement;
     const addGroupButton = within(sessionStartSection).getByRole("button", {
       name: /add group/i,

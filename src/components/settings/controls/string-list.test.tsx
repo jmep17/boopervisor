@@ -87,7 +87,7 @@ describe("StringListControl", () => {
     render(<StringListControl value={["first", "second", "third"]} />);
 
     const moveDownButtons = screen.getAllByRole("button", {
-      name: /move down/i,
+      name: /move entry 1 down/i,
     });
     // Move first entry down
     await user.click(moveDownButtons[0]);

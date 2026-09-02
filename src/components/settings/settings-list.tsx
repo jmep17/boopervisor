@@ -21,7 +21,6 @@ import {
   type FilterableTopic,
 } from "./filterable-settings";
 import { SCOPE_LABELS } from "./scope-labels";
-import { SettingsFileSwitch } from "./settings-file-switch";
 import { SettingRow } from "./setting-row";
 
 const FILE_STATES: Record<string, string> = {
@@ -134,12 +133,11 @@ export async function SettingsList({
         </ul>
       </section>
 
-      {selected.kind === "project" ? <SettingsFileSwitch file={file} /> : null}
-
       <FilterableSettings
         topics={filterableTopics}
         uncatalogued={filterableUncatalogued}
         initialQuery={initialQuery}
+        file={selected.kind === "project" ? file : undefined}
       />
     </div>
   );

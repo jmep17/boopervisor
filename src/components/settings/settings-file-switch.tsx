@@ -8,7 +8,13 @@ import type { ProjectFile } from "@/lib/config/editing-scope";
  * settings win over project settings, so the choice changes both what gets written and how
  * the breakdown below reads "overridden".
  */
-export function SettingsFileSwitch({ file }: { file: ProjectFile }) {
+export function SettingsFileSwitch({
+  file,
+  query,
+}: {
+  file: ProjectFile;
+  query: string;
+}) {
   return (
     <section className="flex flex-col gap-2">
       <p className="max-w-prose text-sm text-gray-900">
@@ -17,7 +23,7 @@ export function SettingsFileSwitch({ file }: { file: ProjectFile }) {
       </p>
       <div className="flex gap-4">
         <Link
-          href="/settings"
+          href={settingsFileHref("project", query)}
           aria-current={file === "project" ? "true" : undefined}
           className={cn(
             "text-sm underline-offset-2 hover:underline",
@@ -27,7 +33,7 @@ export function SettingsFileSwitch({ file }: { file: ProjectFile }) {
           Project <span className="font-mono">.claude/settings.json</span>
         </Link>
         <Link
-          href="/settings?file=local"
+          href={settingsFileHref("local", query)}
           aria-current={file === "local" ? "true" : undefined}
           className={cn(
             "text-sm underline-offset-2 hover:underline",
@@ -40,4 +46,12 @@ export function SettingsFileSwitch({ file }: { file: ProjectFile }) {
       </div>
     </section>
   );
+}
+
+function settingsFileHref(file: ProjectFile, query: string): string {
+  const params = new URLSearchParams();
+  if (file === "local") params.set("file", "local");
+  if (query.trim() !== "") params.set("q", query);
+  const search = params.toString();
+  return search === "" ? "/settings" : `/settings?${search}`;
 }

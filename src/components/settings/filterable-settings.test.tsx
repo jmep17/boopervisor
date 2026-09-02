@@ -38,12 +38,13 @@ function row(key: string, summary?: string): FilterableRow {
   };
 }
 
-function renderSettings(initialQuery = "") {
+function renderSettings(initialQuery = "", file?: "project" | "local") {
   return render(
     <FilterableSettings
       topics={topics}
       uncatalogued={uncatalogued}
       initialQuery={initialQuery}
+      file={file}
     />
   );
 }
@@ -132,6 +133,17 @@ describe("FilterableSettings", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Clear" }));
     await waitFor(() => expect(window.location.search).toBe("?file=local"));
+  });
+
+  test("keeps the query when switching settings files", async () => {
+    renderSettings("", "project");
+
+    await userEvent.type(screen.getByRole("searchbox"), "verbose mode");
+
+    expect(screen.getByRole("link", { name: /Project-local/ })).toHaveAttribute(
+      "href",
+      "/settings?file=local&q=verbose+mode"
+    );
   });
 
   test("starts from the query in the URL", () => {

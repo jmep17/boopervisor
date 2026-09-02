@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import type { ProjectFile } from "@/lib/config/editing-scope";
 import { matchesQuery, queryTerms } from "@/lib/config/setting-search";
+import { SettingsFileSwitch } from "./settings-file-switch";
 import { SettingsFilter } from "./settings-filter";
 
 export interface FilterableRow {
@@ -24,6 +26,8 @@ export interface FilterableSettingsProps {
   uncatalogued: FilterableRow[];
   /** The `q` search param the page was requested with. */
   initialQuery: string;
+  /** Which project settings file is selected; absent at user scope. */
+  file?: ProjectFile;
 }
 
 /**
@@ -35,6 +39,7 @@ export function FilterableSettings({
   topics,
   uncatalogued,
   initialQuery,
+  file,
 }: FilterableSettingsProps) {
   const [query, setQuery] = useState(initialQuery);
   const terms = useMemo(() => queryTerms(query), [query]);
@@ -84,6 +89,8 @@ export function FilterableSettings({
 
   return (
     <div className="flex flex-col gap-10">
+      {file ? <SettingsFileSwitch file={file} query={query} /> : null}
+
       <SettingsFilter
         query={query}
         onQueryChange={setQuery}
@@ -114,28 +121,26 @@ export function FilterableSettings({
         </section>
       ))}
 
-      {uncatalogued.length > 0 ? (
-        <section
-          className="flex flex-col gap-3"
-          hidden={visibleUncatalogued.size === 0}
-        >
-          <h2 className="flex items-center gap-2 text-sm font-medium text-gray-1000">
-            Uncatalogued
-            <Badge tone="warning">{uncatalogued.length}</Badge>
-          </h2>
-          <p className="max-w-prose text-sm text-gray-900">
-            Keys these files hold that the catalog does not describe.
-            Boopervisor preserves them exactly as it found them.
-          </p>
-          <div className="flex flex-col gap-2">
-            {uncatalogued.map((row) => (
-              <div key={row.key} hidden={!visibleUncatalogued.has(row.key)}>
-                {row.node}
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <section
+        className="flex flex-col gap-3"
+        hidden={uncatalogued.length === 0 || visibleUncatalogued.size === 0}
+      >
+        <h2 className="flex items-center gap-2 text-sm font-medium text-gray-1000">
+          Uncatalogued
+          <Badge tone="warning">{uncatalogued.length}</Badge>
+        </h2>
+        <p className="max-w-prose text-sm text-gray-900">
+          Keys these files hold that the catalog does not describe. Boopervisor
+          preserves them exactly as it found them.
+        </p>
+        <div className="flex flex-col gap-2">
+          {uncatalogued.map((row) => (
+            <div key={row.key} hidden={!visibleUncatalogued.has(row.key)}>
+              {row.node}
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

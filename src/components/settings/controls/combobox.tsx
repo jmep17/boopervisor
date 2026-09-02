@@ -1,38 +1,26 @@
 "use client";
 
-import { useId } from "react";
-import { Input } from "@/components/ui/input";
+import { useState } from "react";
+
+import { Picker } from "@/components/ui/picker";
 
 export interface ComboboxControlProps {
   value: unknown;
-  suggestions?: string[];
-  optionSource?: string;
+  suggestions: string[];
 }
 
-export function ComboboxControl({
-  value,
-  suggestions = [],
-  optionSource,
-}: ComboboxControlProps) {
-  const listId = useId();
+export function ComboboxControl({ value, suggestions }: ComboboxControlProps) {
+  const [selected, setSelected] = useState(
+    typeof value === "string" ? value : ""
+  );
 
   return (
-    <>
-      <Input
-        name="value"
-        list={listId}
-        defaultValue={typeof value === "string" ? value : ""}
-        placeholder={
-          optionSource ? `Resolved from ${optionSource}...` : undefined
-        }
-      />
-      {suggestions.length > 0 && (
-        <datalist id={listId}>
-          {suggestions.map((suggestion) => (
-            <option key={suggestion} value={suggestion} />
-          ))}
-        </datalist>
-      )}
-    </>
+    <Picker
+      name="value"
+      mode="free"
+      value={selected}
+      onValueChange={setSelected}
+      options={suggestions.map((suggestion) => ({ value: suggestion }))}
+    />
   );
 }

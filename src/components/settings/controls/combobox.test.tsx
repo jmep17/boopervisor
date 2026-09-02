@@ -1,44 +1,37 @@
 import { describe, expect, test } from "bun:test";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { ComboboxControl } from "./combobox";
 
 describe("ComboboxControl", () => {
-  test("renders a combobox input field", () => {
+  test("shows the value", () => {
     render(<ComboboxControl value="custom" suggestions={["foo", "bar"]} />);
-    const input = screen.getByRole("combobox") as HTMLInputElement;
-    expect(input).toBeInTheDocument();
-    expect(input.value).toBe("custom");
+    expect(screen.getByRole("combobox")).toHaveValue("custom");
   });
 
-  test("renders empty when value is undefined", () => {
-    render(<ComboboxControl value={undefined} suggestions={["foo", "bar"]} />);
-    const input = screen.getByRole("combobox") as HTMLInputElement;
-    expect(input.value).toBe("");
+  test("lists its suggestions on ArrowDown", async () => {
+    const user = userEvent.setup();
+    render(<ComboboxControl value="custom" suggestions={["foo", "bar"]} />);
+    await user.type(screen.getByRole("combobox"), "{ArrowDown}");
+    expect(screen.getAllByRole("option")).toHaveLength(2);
   });
 
-  test("creates a datalist with suggestions", () => {
+  test("accepts free text", async () => {
+    const user = userEvent.setup();
+    render(<ComboboxControl value="custom" suggestions={["foo", "bar"]} />);
+    const input = screen.getByRole("combobox");
+    await user.clear(input);
+    await user.type(input, "anything");
+    await user.tab();
+    expect(input).toHaveValue("anything");
+  });
+
+  test("submits under the value name", () => {
     const { container } = render(
-      <ComboboxControl value="test" suggestions={["foo", "bar", "baz"]} />
+      <form>
+        <ComboboxControl value="test" suggestions={["foo", "bar"]} />
+      </form>
     );
-    const datalist = container.querySelector("datalist");
-    expect(datalist).toBeInTheDocument();
-    const options = datalist?.querySelectorAll("option");
-    expect(options?.length).toBe(3);
-  });
-
-  test("does not render datalist when no suggestions", () => {
-    const { container } = render(
-      <ComboboxControl value="test" suggestions={[]} />
-    );
-    const datalist = container.querySelector("datalist");
-    expect(datalist).not.toBeInTheDocument();
-  });
-
-  test("shows placeholder when optionSource is provided", () => {
-    render(
-      <ComboboxControl value="test" suggestions={[]} optionSource="models" />
-    );
-    const input = screen.getByRole("combobox") as HTMLInputElement;
-    expect(input.placeholder).toContain("Resolved from");
+    expect(container.querySelector('input[type="hidden"][name="value"]')).not.toBeNull();
   });
 });

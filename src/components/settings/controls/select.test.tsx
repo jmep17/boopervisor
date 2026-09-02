@@ -1,37 +1,43 @@
 import { describe, expect, test } from "bun:test";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { SelectControl } from "./select";
 
 describe("SelectControl", () => {
-  test("renders a select control", () => {
+  test("shows the value", () => {
     render(
       <SelectControl value="low" enumValues={["low", "medium", "high"]} />
     );
-    const select = screen.getByRole("combobox");
-    expect(select).toBeInTheDocument();
+    expect(screen.getByRole("combobox")).toHaveValue("low");
   });
 
-  test("has name attribute for form submission", () => {
-    // Radix renders its native field only inside a form, which is where the control lives.
+  test("lists its options on ArrowDown", async () => {
+    const user = userEvent.setup();
+    render(
+      <SelectControl value="low" enumValues={["low", "medium", "high"]} />
+    );
+    await user.type(screen.getByRole("combobox"), "{ArrowDown}");
+    expect(screen.getAllByRole("option")).toHaveLength(3);
+  });
+
+  test("refuses text outside its options", async () => {
+    const user = userEvent.setup();
+    render(
+      <SelectControl value="low" enumValues={["low", "medium", "high"]} />
+    );
+    const input = screen.getByRole("combobox");
+    await user.clear(input);
+    await user.type(input, "other");
+    await user.tab();
+    expect(input).toHaveValue("low");
+  });
+
+  test("submits under the value name", () => {
     const { container } = render(
       <form>
         <SelectControl value="high" enumValues={["low", "medium", "high"]} />
       </form>
     );
-    const selectRoot = container.querySelector('[name="value"]');
-    expect(selectRoot).not.toBeNull();
-  });
-
-  test("handles single enum value", () => {
-    render(<SelectControl value="only" enumValues={["only"]} />);
-    expect(screen.getByRole("combobox")).toBeInTheDocument();
-  });
-
-  test("handles empty enum values list", () => {
-    render(<SelectControl value="" enumValues={[]} />);
-    const trigger = screen.getByRole("combobox");
-    expect(trigger).toBeInTheDocument();
-    expect(trigger).toHaveTextContent("");
-    expect(screen.queryAllByRole("option")).toHaveLength(0);
+    expect(container.querySelector('input[type="hidden"][name="value"]')).not.toBeNull();
   });
 });

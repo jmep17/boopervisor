@@ -24,7 +24,7 @@ export function SettingsFileSwitch({ file }: { file: ProjectFile }) {
             file === "project" ? "text-gray-1000" : "text-gray-900"
           )}
         >
-          Project — .claude/settings.json
+          Project <span className="font-mono">.claude/settings.json</span>
         </Link>
         <Link
           href="/settings?file=local"
@@ -34,7 +34,8 @@ export function SettingsFileSwitch({ file }: { file: ProjectFile }) {
             file === "local" ? "text-gray-1000" : "text-gray-900"
           )}
         >
-          Project-local — .claude/settings.local.json
+          Project-local{" "}
+          <span className="font-mono">.claude/settings.local.json</span>
         </Link>
       </div>
     </section>

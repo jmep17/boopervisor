@@ -142,7 +142,7 @@ export function HistoryRow({
                 Cancel
               </Button>
               <Button type="submit" disabled={pending}>
-                {pending ? "Restoring..." : "Restore"}
+                {pending ? "Restoring…" : "Restore"}
               </Button>
             </DialogFooter>
           </form>

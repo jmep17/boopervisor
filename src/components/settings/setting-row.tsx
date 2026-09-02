@@ -125,7 +125,7 @@ export function SettingRow({
                   }
                 >
                   {SCOPE_LABELS[scope]}
-                  {scope === winningScope ? " — wins" : null}
+                  {scope === winningScope ? " (wins)" : null}
                 </dt>
                 <dd className="min-w-0 break-all font-mono text-gray-1000">
                   {show(perScope[scope])}
@@ -191,11 +191,11 @@ export function SettingRow({
                   onClick={() => openConfirm("save")}
                   disabled={pending}
                 >
-                  {pending ? "Saving" : "Save"}
+                  {pending ? "Saving…" : "Save"}
                 </Button>
               ) : (
                 <Button type="submit" disabled={pending}>
-                  {pending ? "Saving" : "Save"}
+                  {pending ? "Saving…" : "Save"}
                 </Button>
               )}
               {editing in perScope ? (

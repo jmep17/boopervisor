@@ -3,10 +3,6 @@
 Vercel's Geist — https://vercel.com/geist/introduction. Vercel publishes fonts but no React
 component package, so Boopervisor keeps three things of its own:
 
-The judgement above the tokens — typography roles, restraint, copy, motion,
-accessibility — is `DESIGN.md` at the repo root, Vercel's own design.md with
-a note on what applies to a product interface.
-
 - **Fonts.** Geist Sans and Geist Mono from the `geist` npm package, applied in
   `src/app/layout.tsx` as the `--font-geist-sans` / `--font-geist-mono` variables that the
   Tailwind theme's `--font-sans` and `--font-mono` point at. `@geist-ui/react` is an
@@ -19,6 +15,10 @@ a note on what applies to a product interface.
   theme does not define.
 - **Controls.** `src/components/ui/` — shadcn/ui's shape, built on Radix primitives, styled
   only from the token layer.
+
+The judgement above the tokens — typography roles, restraint, copy, motion,
+accessibility — is `DESIGN.md` at the repo root, Vercel's own design.md with
+a note on what applies to a product interface.
 
 ## Where the token values came from
 

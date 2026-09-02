@@ -51,6 +51,17 @@ export function SettingRow({
   const [confirming, setConfirming] = useState(false);
   const dangerous = definition?.dangerous ?? false;
 
+  // A dangerous row submits only through the dialog, whatever triggered it: a
+  // button, or Enter in a text field. The intent says whether "Write it" saves
+  // or unsets; the flag lets the confirmed submission through the guard below.
+  const [intent, setIntent] = useState<"save" | "unset">("save");
+  const confirmedRef = useRef(false);
+  const unsetRef = useRef<HTMLInputElement>(null);
+  const openConfirm = (next: "save" | "unset") => {
+    setIntent(next);
+    setConfirming(true);
+  };
+
   return (
     <details className="group rounded-base border border-gray-alpha-400 bg-background-100">
       <summary className="flex cursor-pointer flex-col gap-2 px-4 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
@@ -121,10 +132,28 @@ export function SettingRow({
             Boopervisor only reads them.
           </p>
         ) : (
-          <form ref={formRef} action={submit} className="flex flex-col gap-3">
+          <form
+            ref={formRef}
+            action={submit}
+            className="flex flex-col gap-3"
+            onSubmit={(event) => {
+              if (dangerous && !confirmedRef.current) {
+                event.preventDefault();
+                openConfirm("save");
+              }
+            }}
+          >
             <input type="hidden" name="key" value={key} />
             <input type="hidden" name="scope" value={editing} />
             <input type="hidden" name="expected" value={expected} />
+            {/* Disabled, so excluded from the form data, until an unset is confirmed. */}
+            <input
+              ref={unsetRef}
+              type="hidden"
+              name="unset"
+              value="1"
+              disabled
+            />
 
             <Field
               label={`Value in ${SCOPE_LABELS[editing].toLowerCase()} settings`}
@@ -146,7 +175,7 @@ export function SettingRow({
               {dangerous ? (
                 <Button
                   type="button"
-                  onClick={() => setConfirming(true)}
+                  onClick={() => openConfirm("save")}
                   disabled={pending}
                 >
                   {pending ? "Saving" : "Save"}
@@ -157,15 +186,26 @@ export function SettingRow({
                 </Button>
               )}
               {editing in perScope ? (
-                <Button
-                  type="submit"
-                  name="unset"
-                  value="1"
-                  variant="secondary"
-                  disabled={pending}
-                >
-                  Unset
-                </Button>
+                dangerous ? (
+                  <Button
+                    type="button"
+                    onClick={() => openConfirm("unset")}
+                    variant="secondary"
+                    disabled={pending}
+                  >
+                    Unset
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    name="unset"
+                    value="1"
+                    variant="secondary"
+                    disabled={pending}
+                  >
+                    Unset
+                  </Button>
+                )
               ) : null}
             </div>
           </form>
@@ -180,7 +220,18 @@ export function SettingRow({
             pending={pending}
             onConfirm={() => {
               setConfirming(false);
-              formRef.current?.requestSubmit();
+              if (unsetRef.current) {
+                unsetRef.current.disabled = intent !== "unset";
+              }
+              confirmedRef.current = true;
+              try {
+                // Dispatches the submit event synchronously, so the flag and the
+                // hidden field are back at rest before anything else runs.
+                formRef.current?.requestSubmit();
+              } finally {
+                confirmedRef.current = false;
+                if (unsetRef.current) unsetRef.current.disabled = true;
+              }
             }}
           />
         ) : null}

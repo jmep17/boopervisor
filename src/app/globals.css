@@ -296,3 +296,15 @@ body {
   background: var(--ds-background-100);
   color: var(--ds-gray-1000);
 }
+
+/* DESIGN.md: "Keep the base experience complete without motion and respect
+   reduced-motion preferences." The only motion is colour transitions and the
+   switch thumb; both are dropped here. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0s;
+    animation-duration: 0s;
+  }
+}

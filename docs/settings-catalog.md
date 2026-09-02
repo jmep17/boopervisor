@@ -94,8 +94,7 @@ edge found in this pass:
   same trap applies to them. A wildcard in a write path is worth a warning in the interface.
 
 **`pluginConfigs`**: still unresolved. The per-plugin shape is plugin-defined and undocumented,
-so it stays a validated JSON editor. Same for `env`, `statusLine`, `agent`, `modelPicker` and
-`autoMode`.
+so it stays a validated JSON editor. Same for `env`, `statusLine`, `modelPicker` and `autoMode`.
 
 **`strictPluginOnlyCustomization`**: a union — `true` locks all four kinds of customization, or
 an array naming them from `"skills"`, `"agents"`, `"hooks"`, `"mcp"`. The reference documents
